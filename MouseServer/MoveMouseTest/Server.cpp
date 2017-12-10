@@ -29,6 +29,14 @@ void rightClick() {
 	mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
 }
 
+void mouseDragStart() {
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+}
+
+void mouseDragEnd() {
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
 
 void mouseMove(std::string xAmt, std::string yAmt) {
 	POINT p;
@@ -164,6 +172,12 @@ int main(void)
 				}
 				else if (recvbuf[0] == 'r') {
 					rightClick();
+				}
+				else if (recvbuf[0] == 'd') {
+					mouseDragStart();
+				}
+				else if (recvbuf[0] == 'e') {
+					mouseDragEnd();
 				}
 				else {
 					int counter = 0;

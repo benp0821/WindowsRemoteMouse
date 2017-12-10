@@ -1,4 +1,3 @@
-//TODO: Make double click and drag equal click and drag
 //TODO: add Pebble functionality
 //TODO: auto populate IP Address with auto detected ip based on scan of network
 //TODO: add keyboard functionality
@@ -27,6 +26,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     float difX = 0, difY = 0;
     boolean mouseClick = false;
     boolean rightClick = false;
+    boolean mouseDragStart = false, mouseDrag = false, mouseDragEnd = false;
     boolean newIP = false;
 
     final int BTN_SPEED = 25;
@@ -238,13 +238,18 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        mouseClick = true;
+        if (!mouseDrag) {
+            mouseClick = true;
+        }
         return true;
     }
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        return false;
+        if (!mouseDrag) {
+            mouseDragStart = true;
+        }
+        return true;
     }
 
     @Override
@@ -282,6 +287,10 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         }else if (event.getAction() == MotionEvent.ACTION_UP){
             difX = 0;
             difY = 0;
+            if (mouseDrag){
+                mouseDrag = false;
+                mouseDragEnd = true;
+            }
         }
 
         return true;
@@ -349,11 +358,22 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                     socket.getOutputStream().write((Math.round(difX) + " " + Math.round(difY) + ";").getBytes());
                     socket.getOutputStream().flush();
 
-                    if (mouseClick){
+                    if (mouseDragStart){
+                        mouseDragStart = false;
+                        mouseDrag = true;
+                        socket.getOutputStream().write(("d;").getBytes());
+                        socket.getOutputStream().flush();
+                    }else if (mouseDragEnd){
+                        mouseDragEnd = false;
+                        mouseClick = false;
+                        rightClick = false;
+                        socket.getOutputStream().write(("e;").getBytes());
+                        socket.getOutputStream().flush();
+                    }else if (mouseClick && !mouseDrag){
                         mouseClick = false;
                         socket.getOutputStream().write(("c;").getBytes());
                         socket.getOutputStream().flush();
-                    }else if (rightClick){
+                    }else if (rightClick && !mouseDrag){
                         rightClick = false;
                         socket.getOutputStream().write(("r;").getBytes());
                         socket.getOutputStream().flush();
