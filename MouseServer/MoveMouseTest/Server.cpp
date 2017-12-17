@@ -29,6 +29,11 @@ void rightClick() {
 	mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
 }
 
+void doubleClick() {
+	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
 void mouseDragStart() {
 	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 }
@@ -172,6 +177,9 @@ int main(void)
 				}
 				else if (recvbuf[0] == 'r') {
 					rightClick();
+				}
+				else if (recvbuf[0] == 'x') {
+					doubleClick();
 				}
 				else if (recvbuf[0] == 'd') {
 					mouseDragStart();

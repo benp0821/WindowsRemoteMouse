@@ -1,4 +1,4 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(387,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (MoveMouseTest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   Server.cpp
-c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(100): warning C4101: 'iSendResult': unreferenced local variable
+c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(105): warning C4101: 'iSendResult': unreferenced local variable
   MoveMouseTest.vcxproj -> C:\Users\benja\Desktop\MouseController\MouseServer\Debug\MouseControlServer.exe
