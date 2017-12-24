@@ -18,11 +18,30 @@
 
 #pragma comment (lib, "Ws2_32.lib")
 
-#define DEFAULT_BUFLEN 32
+#define DEFAULT_BUFLEN 64
 #define DEFAULT_PORT "27015"
+
 
 void mouseClick() {
 	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
+void scrollDown() {
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+}
+
+void scrollUp() {
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
 }
 
 void rightClick() {
@@ -48,44 +67,32 @@ void mouseMove(std::string xAmt, std::string yAmt) {
 
 	if (GetCursorPos(&p)) {
 		int resultX, resultY;
-		int directionX = 1, directionY = 1;
+		int directionX = 0, directionY = 0;
 		if (sscanf_s(xAmt.c_str(), "%d", &resultX) == 1) {
-			if (resultX < 0) {
+			if (resultX < -5) {
 				directionX = -1;
+			}
+			else if (resultX > 5) {
+				directionX = 1;
 			}
 			resultX = abs(resultX);
 		}
 		if (sscanf_s(yAmt.c_str(), "%d", &resultY) == 1) {
-			if (resultY < 0) {
+			if (resultY < -5) {
 				directionY = -1;
+			}
+			else if (resultY > 5) {
+				directionY = 1;
 			}
 			resultY = abs(resultY);
 		}
 
-		int counterX = 0, counterY = 0;
-		while (counterX < resultX || counterY < resultY) {
-			if (counterX < resultX) {
-				if (counterY < resultY) {
-					SetCursorPos(p.x += 1 * directionX, p.y += 1 * directionY);
-					counterY++;
-				}
-				else {
-					SetCursorPos(p.x += 1 * directionX, p.y);
-				}
-				counterX++;
-			}else if (counterY < resultY) {
-				if (counterX < resultX) {
-					SetCursorPos(p.x += 1 * directionX, p.y += 1 * directionY);
-					counterX++;
-				}
-				else {
-					SetCursorPos(p.x, p.y += 1 * directionY);
-				}
-				counterY++;
-			}
-			
+		for (int i = 0; i < (resultX + resultY)/4; i++) {
+			SetCursorPos(p.x += directionX, p.y += directionY);
 			Sleep(1);
 		}
+		
+		
 	}
 }
 
@@ -172,7 +179,15 @@ int main(void)
 			len = recv(ClientSocket, recvbuf, recvbuflen, 0);
 			if (len > 0) {
 				std::string tempX = "", tempY = "";
-				if (recvbuf[0] == 'c') {
+				if (recvbuf[0] == 's') {
+					if (recvbuf[1] == 'd') {
+						scrollDown();
+					}
+					else if (recvbuf[1] == 'u') {
+						scrollUp();
+					}
+				}
+				else if (recvbuf[0] == 'c') {
 					mouseClick();
 				}
 				else if (recvbuf[0] == 'r') {
@@ -186,6 +201,9 @@ int main(void)
 				}
 				else if (recvbuf[0] == 'e') {
 					mouseDragEnd();
+				}
+				else if (recvbuf[0] == ';') {
+
 				}
 				else {
 					int counter = 0;

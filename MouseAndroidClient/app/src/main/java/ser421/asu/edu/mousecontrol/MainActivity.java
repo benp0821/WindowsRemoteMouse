@@ -1,7 +1,6 @@
 //TODO: add Pebble functionality
-//TODO: add zoom and scroll events
-//TODO: problems with double click/ double click and drag
-//TODO: add option to autoscan starting from after currently connected ip (in case multiple servers are on network)
+//TODO: redo mouse movement code
+//TODO: scroll doesn't work on non-standard windows
 //TODO: add keyboard functionality (k command followed by the text in the buffer)
 
 package ser421.asu.edu.mousecontrol;
@@ -23,7 +22,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -31,20 +36,24 @@ import java.net.Socket;
 public class MainActivity extends AppCompatActivity  implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
     float prevX, prevY;
+    float prevX2, prevY2;
     float difX = 0, difY = 0;
     boolean mouseClick = false;
     boolean rightClick = false;
     boolean mouseDragStart = false, mouseDrag = false, mouseDragEnd = false;
     boolean doubleClick = false;
     float doubleClickInitX = 0, doubleClickInitY = 0;
+    int scroll = 0;
     boolean newIP = false;
     boolean transmitMovement = false;
     boolean buttonDown = false;
-    volatile boolean initialScan = true;
+    volatile boolean scan = true, initialScan = true;
     int initScanCounter = 0;
+    boolean multiTouch = false;
     TextView connectionStatusText;
-
-    final int BTN_SPEED = 20;
+    int xSpeed = 0, ySpeed = 0;
+    final int MOVEMENT_MIN = 100;
+    final int SPEED = 20;
 
     GestureDetector detector;
 
@@ -59,6 +68,22 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        try {
+            FileInputStream in = openFileInput("savedIP.txt");
+            InputStreamReader inputStreamReader = new InputStreamReader(in);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            String line = bufferedReader.readLine();
+            serverip = line.trim();
+            initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            initialScan = false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            initialScan = false;
+        }
+
         detector = new GestureDetector(this, this);
 
         connectionStatusText = findViewById(R.id.connectionStatusTxt);
@@ -70,12 +95,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difY = -BTN_SPEED;
+                    ySpeed = -SPEED;
+                    xSpeed = 0;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difY = 0;
+                    ySpeed = 0;
+                    xSpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -90,12 +117,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difY = BTN_SPEED;
+                    ySpeed = SPEED;
+                    xSpeed = 0;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difY = 0;
+                    ySpeed = 0;
+                    xSpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -111,12 +140,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difX = -BTN_SPEED;
+                    xSpeed = -SPEED;
+                    ySpeed = 0;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -132,12 +163,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difX = BTN_SPEED;
+                    xSpeed = SPEED;
+                    ySpeed = 0;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -153,14 +186,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difX = -BTN_SPEED;
-                    difY = -BTN_SPEED;
+                    xSpeed = -SPEED;
+                    ySpeed = -SPEED;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
-                    difY = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -176,14 +209,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difX = BTN_SPEED;
-                    difY = -BTN_SPEED;
+                    xSpeed = SPEED;
+                    ySpeed = -SPEED;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
-                    difY = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -199,14 +232,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    difX = -BTN_SPEED;
-                    difY = BTN_SPEED;
+                    xSpeed = -SPEED;
+                    ySpeed = SPEED;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
-                    difY = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -222,14 +255,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public boolean onTouch(View v, MotionEvent event) {
                 hideKeyboard();
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    difX = BTN_SPEED;
-                    difY = BTN_SPEED;
+                    xSpeed = SPEED;
+                    ySpeed = SPEED;
                     transmitMovement = true;
                     buttonDown = true;
                     return true;
                 }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    difX = 0;
-                    difY = 0;
+                    xSpeed = 0;
+                    ySpeed = 0;
                     buttonDown = false;
                     return true;
                 }
@@ -241,8 +274,16 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         rescanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                initialScan = true;
+                scan = true;
                 initScanCounter = 0;
+            }
+        });
+
+        View continueButton = findViewById(R.id.continueBtn);
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                scan = true;
             }
         });
 
@@ -252,11 +293,12 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             @Override
             public boolean onEditorAction(TextView textView, int keyCode, KeyEvent event) {
                 if (keyCode == EditorInfo.IME_ACTION_DONE) {
-                    initialScan = false;
+                    scan = false;
                     String PATTERN = "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$";
                     String temp = textView.getText().toString().trim();
                     if (temp.matches(PATTERN)) {
                         serverip = temp;
+                        initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
                     }else{
                         Toast.makeText(getApplicationContext(), "Invalid IP Syntax", Toast.LENGTH_LONG).show();
                     }
@@ -295,37 +337,45 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        if (!mouseDrag) {
-            mouseClick = true;
+        if (!multiTouch) {
+            if (!mouseDrag) {
+                mouseClick = true;
+            }else{
+                mouseDragEnd = true;
+                mouseDrag = false;
+            }
+            return true;
         }
-        return true;
+        return false;
     }
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        doubleClickInitX = e.getX();
-        doubleClickInitY = e.getY();
-        return true;
+        if (!multiTouch) {
+            doubleClickInitX = e.getX();
+            doubleClickInitY = e.getY();
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
-        if(e.getAction() == MotionEvent.ACTION_MOVE && !mouseDrag && !mouseDragEnd && !mouseDragStart){
-            if (Math.abs(e.getX() - doubleClickInitX) > 15 || Math.abs(e.getY() - doubleClickInitY) > 15){
-                mouseDragStart = true;
-            }else{
+        if (!multiTouch) {
+            if (e.getAction() == MotionEvent.ACTION_MOVE && !mouseDrag && !mouseDragEnd && !mouseDragStart) {
+                if (Math.abs(e.getX() - doubleClickInitX) > 15 || Math.abs(e.getY() - doubleClickInitY) > 15) {
+                    mouseDragStart = true;
+                }
+            } else if (e.getAction() == MotionEvent.ACTION_UP && !mouseDragStart && !mouseDrag && !mouseDragEnd) {
                 doubleClick = true;
             }
-        }else if (e.getAction() == MotionEvent.ACTION_UP && !mouseDragStart && !mouseDrag && !mouseDragEnd){
-            doubleClick = true;
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
     public boolean onDown(MotionEvent e) {
-        prevX = e.getX();
-        prevY = e.getY();
-        return true;
+        return false;
     }
 
     public void hideKeyboard(){
@@ -337,28 +387,73 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
     @Override
     public boolean onTouchEvent(MotionEvent event){
-        detector.onTouchEvent(event);
 
+        detector.onTouchEvent(event);
         hideKeyboard();
 
-        if (event.getAction() == MotionEvent.ACTION_MOVE){
-            difX = event.getX() - prevX;
-            difY = event.getY() - prevY;
-            if (Math.abs(difX) > BTN_SPEED || Math.abs(difY) > BTN_SPEED){
+        switch(event.getActionMasked()) {
+            case MotionEvent.ACTION_POINTER_UP:
+            case MotionEvent.ACTION_UP:
+                difX = 0;
+                difY = 0;
+                transmitMovement = false;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (!multiTouch) {
+                    difX = event.getX() - prevX;
+                    difY = event.getY() - prevY;
+                    if (Math.abs(difX) > MOVEMENT_MIN || Math.abs(difY) > MOVEMENT_MIN) {
+                        if (difX > MOVEMENT_MIN){
+                            prevX = event.getX();
+                            xSpeed = SPEED;
+                        }else if (difX < -MOVEMENT_MIN){
+                            xSpeed = -SPEED;
+                            prevX = event.getX();
+                        }else if (difX < 30 && difX > -30){
+                            xSpeed = 0;
+                        }
+                        if (difY > MOVEMENT_MIN){
+                            prevY = event.getY();
+                            ySpeed = SPEED;
+                        }else if (difY < -MOVEMENT_MIN){
+                            ySpeed = -SPEED;
+                            prevY = event.getY();
+                        }else if (difY < 30 && difY > -30){
+                            ySpeed = 0;
+                        }
+                        transmitMovement = true;
+                    }
+                }else if (event.getPointerCount() > 1 && event.getY(0) - prevY > 40 && event.getY(1) - prevY2 > 40) {
+                    System.out.println("two finger scroll up");
+                    scroll = 2;
+                    prevX = event.getX(0);
+                    prevY = event.getY(0);
+                    prevX2 = event.getX(1);
+                    prevY2 = event.getY(1);
+                }else if (event.getPointerCount() > 1 && event.getY(0) - prevY < -40 && event.getY(1) - prevY2 < -40) {
+                    System.out.println("two finger scroll down");
+                    scroll = 1;
+                    prevX = event.getX(0);
+                    prevY = event.getY(0);
+                    prevX2 = event.getX(1);
+                    prevY2 = event.getY(1);
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                multiTouch = true;
+                prevX = event.getX(0);
+                prevY = event.getY(0);
+                prevX2 = event.getX(1);
+                prevY2 = event.getY(1);
+                break;
+            case MotionEvent.ACTION_DOWN:
                 prevX = event.getX();
                 prevY = event.getY();
-                transmitMovement = true;
-            }
-        }else if (event.getAction() == MotionEvent.ACTION_UP){
-            difX = 0;
-            difY = 0;
-            if (mouseDrag){
-                mouseDragStart = false;
-                mouseDrag = false;
-                mouseDragEnd = true;
-            }
+                if (multiTouch){
+                    multiTouch = false;
+                }
+                break;
         }
-
         return true;
     }
 
@@ -379,7 +474,9 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
     @Override
     public void onLongPress(MotionEvent e) {
-        rightClick = true;
+        if (!multiTouch) {
+            rightClick = true;
+        }
     }
 
     @Override
@@ -391,7 +488,34 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
         @Override
         public void run() {
-            if (initialScan) {
+            if (scan) {
+                if (initialScan) {
+                    try {
+                        InetSocketAddress serverAddr = new InetSocketAddress(serverip, SERVERPORT);
+                        socket = new Socket();
+                        try {
+                            connectionStatusText.setText("Scanning " + serverip);
+                            connectionStatusText.invalidate();
+                            Thread.sleep(100);
+                            socket.connect(serverAddr, 2000);
+                            scan = false;
+                        } catch (ConnectException e) {
+                            e.printStackTrace();
+                            socket.close();
+                            scan = true;
+                            initScanCounter = 0;
+                        }finally {
+                            initialScan = false;
+                        }
+                    } catch (Exception e) {
+                        scan = true;
+                        initScanCounter = 0;
+                        e.printStackTrace();
+                    } finally {
+                        initialScan = false;
+                    }
+                }
+
                 WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
                 WifiInfo connectionInfo = wm.getConnectionInfo();
@@ -399,16 +523,32 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 String ipString = Formatter.formatIpAddress(ipAddress);
                 String prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1);
                 System.out.println(ipString);
-                while (initScanCounter < 255 && initialScan) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                while (initScanCounter < 255 && scan) {
                     try {
                         String ip = prefix + String.valueOf(initScanCounter);
                         InetSocketAddress serverAddr = new InetSocketAddress(ip, SERVERPORT);
                         socket = new Socket();
                         try {
                             connectionStatusText.setText("Scanning " + ip);
+                            connectionStatusText.invalidate();
+                            Thread.sleep(200);
                             socket.connect(serverAddr, 500);
-                            initialScan = false;
+                            scan = false;
                             serverip = ip;
+
+                            FileOutputStream outputStream;
+                            try {
+                                outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
+                                outputStream.write(serverip.getBytes());
+                                outputStream.close();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }catch (ConnectException e){
                             e.printStackTrace();
                             socket.close();
@@ -418,7 +558,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                     }
                     initScanCounter++;
                 }
-                initialScan = false;
+                scan = false;
             }else{
                 try {
                     InetSocketAddress serverAddr = new InetSocketAddress(serverip, SERVERPORT);
@@ -440,7 +580,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 ipTextBox.setText(serverip);
             }
 
-            while (socket != null && socket.isConnected() && transmitData() && !initialScan);
+            rightClick = false;
+            mouseClick = false;
+            doubleClick = false;
+            mouseDrag = false;
+            mouseDragStart = false;
+            mouseDragEnd = false;
+            scroll = 0;
+            while (socket != null && socket.isConnected() && transmitData() && !scan);
 
             try {
                 socket.close();
@@ -449,26 +596,31 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            connectionStatusText.setText("Connection Failed");
+            if (!scan) {
+                connectionStatusText.setText("Connection Failed");
+            }
         }
 
         public boolean transmitData(){
             try{
                 if (socket != null) {
                     if (transmitMovement) {
-                        socket.getOutputStream().write((Math.round(difX) + " " + Math.round(difY) + ";").getBytes());
+                        socket.getOutputStream().write((Math.round(xSpeed) + " " + Math.round(ySpeed) + ";").getBytes());
                         socket.getOutputStream().flush();
-                        if (!buttonDown) {
-                            transmitMovement = false;
-                        }
-                        if (buttonDown){
-                            Thread.sleep(15);
-                        }
+                        Thread.sleep(30);
                     }
 
-                    if (mouseDragStart){
+                    if (scroll != 0){
+                        if (scroll == 1){
+                            socket.getOutputStream().write(("sd;").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (scroll == 2){
+                            socket.getOutputStream().write(("su;").getBytes());
+                            socket.getOutputStream().flush();
+                        }
+                        scroll = 0;
+                    }else if (mouseDragStart){
                         mouseDragStart = false;
-                        mouseDragEnd = false;
                         mouseDrag = true;
                         socket.getOutputStream().write(("d;").getBytes());
                         socket.getOutputStream().flush();
