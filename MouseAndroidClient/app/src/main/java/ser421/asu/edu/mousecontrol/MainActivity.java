@@ -1,19 +1,24 @@
 //TODO: add Pebble functionality
 //TODO: redo mouse movement code
 //TODO: scroll doesn't work on non-standard windows
-//TODO: add keyboard functionality (k command followed by the text in the buffer)
+//TODO: add option to exit server to system tray
+//TODO: fix logic for detecting backspace keyboard event
+//TODO: when wifi connection is lost, socket is not closed and device cannot reconnect when wifi is back
+//TODO: when app is opened with no wifi, it does not connect to wifi when it is available
+//TODO: voice control on keyboard causes problems with long sentences
 
 package ser421.asu.edu.mousecontrol;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.Formatter;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.GestureDetector;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -23,15 +28,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.ByteOrder;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity  implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
@@ -46,7 +54,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     int scroll = 0;
     boolean newIP = false;
     boolean transmitMovement = false;
-    boolean buttonDown = false;
+    String keyboardBuf = "";
     volatile boolean scan = true, initialScan = true;
     int initScanCounter = 0;
     boolean multiTouch = false;
@@ -54,6 +62,9 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     int xSpeed = 0, ySpeed = 0;
     final int MOVEMENT_MIN = 100;
     final int SPEED = 20;
+    int previousBufLength = 0;
+
+    EditText hiddenKeyBuffer;
 
     GestureDetector detector;
 
@@ -76,9 +87,6 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             String line = bufferedReader.readLine();
             serverip = line.trim();
             initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            initialScan = false;
         } catch (IOException e) {
             e.printStackTrace();
             initialScan = false;
@@ -89,225 +97,226 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         connectionStatusText = findViewById(R.id.connectionStatusTxt);
 
         View up = findViewById(R.id.upBtn);
-        up.setOnTouchListener(new View.OnTouchListener(){
+        up.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    ySpeed = -SPEED;
-                    xSpeed = 0;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    ySpeed = 0;
-                    xSpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                ySpeed = -SPEED;
+                xSpeed = 0;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                ySpeed = 0;
+                xSpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
         View down = findViewById(R.id.downBtn);
-        down.setOnTouchListener(new View.OnTouchListener(){
+        down.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    ySpeed = SPEED;
-                    xSpeed = 0;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    ySpeed = 0;
-                    xSpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                ySpeed = SPEED;
+                xSpeed = 0;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                ySpeed = 0;
+                xSpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View left = findViewById(R.id.leftBtn);
-        left.setOnTouchListener(new View.OnTouchListener(){
+        left.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    xSpeed = -SPEED;
-                    ySpeed = 0;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                xSpeed = -SPEED;
+                ySpeed = 0;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View right = findViewById(R.id.rightBtn);
-        right.setOnTouchListener(new View.OnTouchListener(){
+        right.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    xSpeed = SPEED;
-                    ySpeed = 0;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                xSpeed = SPEED;
+                ySpeed = 0;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View leftUp = findViewById(R.id.leftUpBtn);
-        leftUp.setOnTouchListener(new View.OnTouchListener(){
+        leftUp.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    xSpeed = -SPEED;
-                    ySpeed = -SPEED;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                xSpeed = -SPEED;
+                ySpeed = -SPEED;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View rightUp = findViewById(R.id.rightUpBtn);
-        rightUp.setOnTouchListener(new View.OnTouchListener(){
+        rightUp.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    xSpeed = SPEED;
-                    ySpeed = -SPEED;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                xSpeed = SPEED;
+                ySpeed = -SPEED;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View leftDown = findViewById(R.id.leftDownBtn);
-        leftDown.setOnTouchListener(new View.OnTouchListener(){
+        leftDown.setOnTouchListener((v, event) -> {
+            v.performClick();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                    xSpeed = -SPEED;
-                    ySpeed = SPEED;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
-                }
-                return false;
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+                xSpeed = -SPEED;
+                ySpeed = SPEED;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
             }
+            return false;
         });
 
 
         View rightDown = findViewById(R.id.rightDownBtn);
-        rightDown.setOnTouchListener(new View.OnTouchListener(){
+        rightDown.setOnTouchListener((v, event) -> {
+            v.performClick();
+
+            hideIPKeyboard();
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                xSpeed = SPEED;
+                ySpeed = SPEED;
+                transmitMovement = true;
+                return true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP ){
+                xSpeed = 0;
+                ySpeed = 0;
+                transmitMovement = false;
+                return true;
+            }
+            return false;
+        });
+
+        hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.setBackgroundColor(Color.TRANSPARENT);
+        hiddenKeyBuffer.setTextColor(Color.TRANSPARENT);
+        hiddenKeyBuffer.setCursorVisible(false);
+        hiddenKeyBuffer.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
 
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED;
-                    ySpeed = SPEED;
-                    transmitMovement = true;
-                    buttonDown = true;
-                    return true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    buttonDown = false;
-                    return true;
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!hiddenKeyBuffer.getText().toString().equals("")) {
+                    if (previousBufLength > hiddenKeyBuffer.getText().toString().length()){
+                        keyboardBuf = "\\b";
+                    }else {
+                        keyboardBuf = hiddenKeyBuffer.getText().toString().substring(previousBufLength);
+                    }
+                    previousBufLength = hiddenKeyBuffer.getText().toString().length();
                 }
-                return false;
             }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        hiddenKeyBuffer.setOnEditorActionListener((textView, keyCode, event) -> {
+            if (keyCode == EditorInfo.IME_ACTION_DONE) {
+                keyboardBuf = "\\n";
+            }
+            return true;
         });
 
         View rescanButton = findViewById(R.id.rescanBtn);
-        rescanButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                scan = true;
-                initScanCounter = 0;
-            }
+        rescanButton.setOnClickListener(v -> {
+            scan = true;
+            initScanCounter = 0;
         });
 
         View continueButton = findViewById(R.id.continueBtn);
-        continueButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                scan = true;
-            }
-        });
+        continueButton.setOnClickListener(v -> scan = true);
 
-        CustomEditText ipTextBox = findViewById(R.id.ipAddrTxt);
+        View abcButton = findViewById(R.id.keyboardButton);
+        abcButton.setOnClickListener(v -> showKeyBufferKeyboard());
+
+        ClearFocusOnBackEditText ipTextBox = findViewById(R.id.ipAddrTxt);
         ipTextBox.setRawInputType(Configuration.KEYBOARD_12KEY);
-        ipTextBox.setOnEditorActionListener(new TextView.OnEditorActionListener(){
-            @Override
-            public boolean onEditorAction(TextView textView, int keyCode, KeyEvent event) {
-                if (keyCode == EditorInfo.IME_ACTION_DONE) {
-                    scan = false;
-                    String PATTERN = "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$";
-                    String temp = textView.getText().toString().trim();
-                    if (temp.matches(PATTERN)) {
-                        serverip = temp;
-                        initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
-                    }else{
-                        Toast.makeText(getApplicationContext(), "Invalid IP Syntax", Toast.LENGTH_LONG).show();
-                    }
-                    newIP = true;
-                    hideKeyboard();
-                    return true;
+        ipTextBox.setOnEditorActionListener((textView, keyCode, event) -> {
+            if (keyCode == EditorInfo.IME_ACTION_DONE) {
+                scan = false;
+                String PATTERN = "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$";
+                String temp = textView.getText().toString().trim();
+                if (temp.matches(PATTERN)) {
+                    serverip = temp;
+                    initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
+                }else{
+                    Toast.makeText(getApplicationContext(), "Invalid IP Syntax", Toast.LENGTH_LONG).show();
                 }
-                return false;
+                newIP = true;
+                hideIPKeyboard();
+                return true;
             }
+            return false;
         });
 
         thread = new ClientThread();
@@ -378,18 +387,30 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         return false;
     }
 
-    public void hideKeyboard(){
+    public void hideIPKeyboard(){
         EditText ipTextBox = findViewById(R.id.ipAddrTxt);
         ipTextBox.clearFocus();
         InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        mgr.hideSoftInputFromWindow(ipTextBox.getWindowToken(), 0);
+        if (mgr != null) {
+            mgr.hideSoftInputFromWindow(ipTextBox.getWindowToken(), 0);
+        }
+    }
+
+    public void showKeyBufferKeyboard(){
+        EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.showSoftInput(hiddenKeyBuffer, InputMethodManager.SHOW_IMPLICIT);
+        }
+        hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length());
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event){
 
         detector.onTouchEvent(event);
-        hideKeyboard();
+        hideIPKeyboard();
 
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_POINTER_UP:
@@ -494,7 +515,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         InetSocketAddress serverAddr = new InetSocketAddress(serverip, SERVERPORT);
                         socket = new Socket();
                         try {
-                            connectionStatusText.setText("Scanning " + serverip);
+                            connectionStatusText.setText(String.format("%s %s", getString(R.string.scanningText), serverip));
                             connectionStatusText.invalidate();
                             Thread.sleep(100);
                             socket.connect(serverAddr, 2000);
@@ -518,11 +539,34 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
                 WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-                WifiInfo connectionInfo = wm.getConnectionInfo();
-                int ipAddress = connectionInfo.getIpAddress();
-                String ipString = Formatter.formatIpAddress(ipAddress);
-                String prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1);
-                System.out.println(ipString);
+                WifiInfo connectionInfo;
+                String ipString = null;
+                if (wm != null) {
+                    connectionInfo = wm.getConnectionInfo();
+
+                    int ipAddress = connectionInfo.getIpAddress();
+
+                    if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)){
+                        ipAddress = Integer.reverseBytes(ipAddress);
+                    }
+
+                    byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+                    try {
+                        ipString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+                }
+                //String ipString = Formatter.formatIpAddress(ipAddress);
+                String prefix;
+                if (ipString != null) {
+                    prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1);
+                }else{
+                    prefix = "0.0.0.";
+                    initScanCounter = 255;
+                }
+
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
@@ -534,7 +578,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         InetSocketAddress serverAddr = new InetSocketAddress(ip, SERVERPORT);
                         socket = new Socket();
                         try {
-                            connectionStatusText.setText("Scanning " + ip);
+                            connectionStatusText.setText(String.format("%s %s", getString(R.string.scanningText), ip));
                             connectionStatusText.invalidate();
                             Thread.sleep(200);
                             socket.connect(serverAddr, 500);
@@ -575,8 +619,8 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 }
             }
             if (socket != null && socket.isConnected()){
-                connectionStatusText.setText("Connected to " + serverip);
-                CustomEditText ipTextBox = findViewById(R.id.ipAddrTxt);
+                connectionStatusText.setText(String.format("%s %s", getString(R.string.ConnectedToText), serverip));
+                ClearFocusOnBackEditText ipTextBox = findViewById(R.id.ipAddrTxt);
                 ipTextBox.setText(serverip);
             }
 
@@ -587,7 +631,13 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             mouseDragStart = false;
             mouseDragEnd = false;
             scroll = 0;
-            while (socket != null && socket.isConnected() && transmitData() && !scan);
+
+            boolean keepLooping = true;
+            while (keepLooping){
+                if (socket == null || !socket.isConnected() || !transmitData() || scan){
+                    keepLooping = false;
+                }
+            }
 
             try {
                 socket.close();
@@ -597,11 +647,11 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 e.printStackTrace();
             }
             if (!scan) {
-                connectionStatusText.setText("Connection Failed");
+                connectionStatusText.setText(R.string.failedConnectionText);
             }
         }
 
-        public boolean transmitData(){
+        boolean transmitData(){
             try{
                 if (socket != null) {
                     if (transmitMovement) {
@@ -610,19 +660,23 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         Thread.sleep(30);
                     }
 
-                    if (scroll != 0){
+                    if (!Objects.equals(keyboardBuf, "")){
+                        socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
+                        socket.getOutputStream().flush();
+                        keyboardBuf = "";
+                    }else if (scroll != 0){
                         if (scroll == 1){
-                            socket.getOutputStream().write(("sd;").getBytes());
+                            socket.getOutputStream().write(("sd").getBytes());
                             socket.getOutputStream().flush();
                         }else if (scroll == 2){
-                            socket.getOutputStream().write(("su;").getBytes());
+                            socket.getOutputStream().write(("su").getBytes());
                             socket.getOutputStream().flush();
                         }
                         scroll = 0;
                     }else if (mouseDragStart){
                         mouseDragStart = false;
                         mouseDrag = true;
-                        socket.getOutputStream().write(("d;").getBytes());
+                        socket.getOutputStream().write(("d").getBytes());
                         socket.getOutputStream().flush();
                         System.out.println("drag start");
                     }else if (mouseDragEnd){
@@ -630,30 +684,27 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         mouseDrag = false;
                         mouseClick = false;
                         rightClick = false;
-                        socket.getOutputStream().write(("e;").getBytes());
+                        socket.getOutputStream().write(("e").getBytes());
                         socket.getOutputStream().flush();
                         System.out.println("drag end");
                     }else if (doubleClick && !mouseDrag && !mouseClick){
                         doubleClick = false;
-                        socket.getOutputStream().write(("x;").getBytes());
+                        socket.getOutputStream().write(("x").getBytes());
                         socket.getOutputStream().flush();
                         System.out.println("double click");
                     }else if (mouseClick && !mouseDrag && !rightClick){
                         mouseClick = false;
-                        socket.getOutputStream().write(("c;").getBytes());
+                        socket.getOutputStream().write(("c").getBytes());
                         socket.getOutputStream().flush();
                         System.out.println("mouse click");
                     }else if (rightClick && !mouseDrag){
                         rightClick = false;
-                        socket.getOutputStream().write(("r;").getBytes());
+                        socket.getOutputStream().write(("r").getBytes());
                         socket.getOutputStream().flush();
                         System.out.println("right click");
                     }
                 }
-            }catch(IOException e){
-                e.printStackTrace();
-                return false;
-            } catch (InterruptedException e) {
+            }catch(IOException | InterruptedException e){
                 e.printStackTrace();
                 return false;
             }

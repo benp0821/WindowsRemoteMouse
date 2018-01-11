@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="ser421.asu.edu.mousecontrol.MainActivity"
@@ -182,7 +183,7 @@
         app:layout_constraintTop_toBottomOf="@+id/rightBtn"
         app:layout_constraintVertical_bias="0.125" />
 
-    <ser421.asu.edu.mousecontrol.CustomEditText
+    <ser421.asu.edu.mousecontrol.ClearFocusOnBackEditText
         android:id="@+id/ipAddrTxt"
         android:layout_width="171dp"
         android:layout_height="wrap_content"
@@ -249,4 +250,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/ipAddrTxt"
         app:layout_constraintVertical_bias="0.177" />
+
+    <Button
+        android:id="@+id/keyboardButton"
+        android:layout_width="54dp"
+        android:layout_height="43dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="ABC"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <EditText
+        android:id="@+id/hiddenKeyBuffer"
+        android:layout_width="44dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:inputType="textNoSuggestions"
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.975"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.982"
+        tools:text="a" />
 </android.support.constraint.ConstraintLayout>

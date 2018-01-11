@@ -18,7 +18,7 @@
 
 #pragma comment (lib, "Ws2_32.lib")
 
-#define DEFAULT_BUFLEN 64
+#define DEFAULT_BUFLEN 200
 #define DEFAULT_PORT "27015"
 
 
@@ -42,6 +42,43 @@ void scrollUp() {
 	Handle = WindowFromPoint(P);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
+}
+
+void printBufferToActiveWindow(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	for (int i = 0; i < message.length(); i++) {
+		if (message[i] == '\\') {
+			if (message[i + 1] == 'n') {
+				ip.ki.wVk = VK_RETURN;
+				ip.ki.wScan = MapVirtualKeyEx(VK_RETURN, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
+				i++;
+			}
+			else if (message[i + 1] == 'b'){
+				ip.ki.wVk = VK_BACK;
+				ip.ki.wScan = MapVirtualKeyEx(VK_BACK, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
+				i++;
+			}
+			else {
+				ip.ki.dwFlags = KEYEVENTF_UNICODE;
+				ip.ki.wScan = message[i];
+			}
+		}
+		else {
+			ip.ki.dwFlags = KEYEVENTF_UNICODE;
+			ip.ki.wScan = message[i];
+		}
+
+		SendInput(1, &ip, sizeof(INPUT));
+
+		ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+		SendInput(1, &ip, sizeof(INPUT));
+	}
 }
 
 void rightClick() {
@@ -202,8 +239,14 @@ int main(void)
 				else if (recvbuf[0] == 'e') {
 					mouseDragEnd();
 				}
-				else if (recvbuf[0] == ';') {
-
+				else if (recvbuf[0] == 'k') {
+					int counter = 1;
+					std::string message = "";
+					while (counter < len) {
+						message += recvbuf[counter];
+						counter++;
+					}
+					printBufferToActiveWindow(message);
 				}
 				else {
 					int counter = 0;

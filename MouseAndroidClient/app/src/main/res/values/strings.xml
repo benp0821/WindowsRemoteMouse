@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MouseControl</string>
+    <string name="failedConnectionText">Connection Failed</string>
+    <string name="ConnectedToText">Connected to</string>
+    <string name="scanningText">Scanning</string>
 </resources>
