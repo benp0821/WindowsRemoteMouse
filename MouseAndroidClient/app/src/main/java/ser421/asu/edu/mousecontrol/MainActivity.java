@@ -4,8 +4,11 @@
 //TODO: add option to exit server to system tray
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: if app window is resized while connected to ip, and then user disconnects from that ip, it will no longer be able to connect to that ip again until app is restarted
-//TODO: add support for arrow keys
+//TODO: add support for arrow keys on keyboard
+//TODO: add toggle to make mouse arrow keys control keyboard arrow keys
 //TODO: add support for emojis and non-ascii characters
+//TODO: connecting to ip address causes backspace to be triggered for some reason
+//TODO: behaves weird if scan connects to ip while user has focus on ip text box
 
 package ser421.asu.edu.mousecontrol;
 
@@ -58,7 +61,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     boolean transmitMovement = false;
     String keyboardBuf = "";
     volatile boolean scan = true, initialScan = true;
-    int initScanCounter = 0;
+    int initScanCounter = 1;
     boolean multiTouch = false;
     TextView connectionStatusText;
     int xSpeed = 0, ySpeed = 0;
@@ -315,8 +318,12 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
         View rescanButton = findViewById(R.id.rescanBtn);
         rescanButton.setOnClickListener(v -> {
+            if (scan){
+                initScanCounter = 0;
+            }else{
+                initScanCounter = 1;
+            }
             scan = true;
-            initScanCounter = 0;
             hideIPKeyboard();
         });
 
@@ -338,7 +345,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 String temp = textView.getText().toString().trim();
                 if (temp.matches(PATTERN)) {
                     serverip = temp;
-                    initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length())) + 1;
+                    initScanCounter = Integer.parseInt(serverip.substring(serverip.lastIndexOf(".") + 1, serverip.length()));
                 }else{
                     Toast.makeText(getApplicationContext(), "Invalid IP Syntax", Toast.LENGTH_LONG).show();
                 }
@@ -570,13 +577,13 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                             e.printStackTrace();
                             socket.close();
                             scan = true;
-                            initScanCounter = 0;
+                            initScanCounter = 1;
                         }finally {
                             initialScan = false;
                         }
                     } catch (Exception e) {
                         scan = true;
-                        initScanCounter = 0;
+                        initScanCounter = 1;
                         e.printStackTrace();
                     } finally {
                         initialScan = false;
