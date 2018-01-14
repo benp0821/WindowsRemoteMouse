@@ -4,7 +4,7 @@
 //TODO: add option to exit server to system tray
 //TODO: fix logic for detecting backspace keyboard event
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: switch from constraintlayout and make it work on all device sizes
+//TODO: if app window is resized while connected to ip, and then user disconnects from that ip, it will no longer be able to connect to that ip again until app is restarted
 
 package ser421.asu.edu.mousecontrol;
 
@@ -657,11 +657,18 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 }
             }
             if (socket != null && socket.isConnected()){
-                connectionStatusText.setText(String.format("%s %s", getString(R.string.ConnectedToText), serverip));
-                ClearFocusOnBackEditText ipTextBox = findViewById(R.id.ipAddrTxt);
-                ipTextBox.setText(serverip);
+                runOnUiThread(() -> {
+                    connectionStatusText.setText(String.format("%s %s", getString(R.string.ConnectedToText), serverip));
+                    ClearFocusOnBackEditText ipTextBox = findViewById(R.id.ipAddrTxt);
+                    ipTextBox.setText(serverip);
+                });
             }
 
+            keyboardBuf = "";
+            runOnUiThread(() -> {
+                hiddenKeyBuffer.setText("");
+            });
+            previousBufLength = 0;
             rightClick = false;
             mouseClick = false;
             doubleClick = false;
