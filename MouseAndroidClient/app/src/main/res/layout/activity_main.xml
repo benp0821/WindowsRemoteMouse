@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="left">
+            android:gravity="start">
 
             <ser421.asu.edu.mousecontrol.ClearFocusOnBackEditText
                 android:id="@+id/ipAddrTxt"
@@ -31,19 +31,19 @@
                 android:imeOptions="actionDone"
                 android:inputType="textPersonName"
                 android:selectAllOnFocus="true"
-                android:text="Enter IP Address"/>
+                android:text="@string/ipPlaceholderText"/>
 
             <Button
                 android:id="@+id/rescanBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Rescan Network" />
+                android:text="@string/rescanText" />
 
             <Button
                 android:id="@+id/continueBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Continue Scanning"/>
+                android:text="@string/continueScanText"/>
 
         </android.widget.LinearLayout>
 
@@ -70,7 +70,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="fill"
-                android:text="^\n|"
+                android:text="@string/upArrow"
                 tools:text="^\n|" />
 
             <Button
@@ -84,7 +84,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="fill"
-                android:text="&lt;&#8211;"
+                android:text="@string/leftArrow"
                 tools:text="&lt;&#8211;" />
 
             <View
@@ -97,7 +97,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="fill"
-                android:text="&#8211;&gt;"
+                android:text="@string/rightArrow"
                 tools:text="&#8211;&gt;" />
 
             <Button
@@ -111,7 +111,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="fill"
-                android:text="|\nv"
+                android:text="@string/downArrow"
                 tools:text="|\nv" />
 
             <Button
@@ -143,8 +143,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_marginBottom="2dp"
-            android:layout_marginLeft="2dp"
-            android:text="Initializing" />
+            android:layout_marginStart="2dp"
+            android:text="@string/initializing" />
 
         <View
             android:layout_width="wrap_content"
@@ -156,7 +156,7 @@
             android:id="@+id/keyboardButton"
             android:layout_width="55dp"
             android:layout_height="wrap_content"
-            android:text="ABC" />
+            android:text="@string/abc" />
 
     </android.widget.LinearLayout>
 
@@ -167,6 +167,7 @@
         android:layout_height="0dp"
         android:ems="10"
         android:inputType="textNoSuggestions"
-        android:text=""
-        tools:text="" />
+        android:text="@string/initialHiddenBufferText"
+        android:hint=""
+        tools:text="/" />
 </android.widget.LinearLayout>

@@ -3,4 +3,14 @@
     <string name="failedConnectionText">Connection Failed</string>
     <string name="ConnectedToText">Connected to</string>
     <string name="scanningText">Scanning</string>
+    <string name="ipPlaceholderText">Enter IP Address</string>
+    <string name="rescanText">Rescan Network</string>
+    <string name="continueScanText">Continue Scanning</string>
+    <string name="upArrow">^ |</string>
+    <string name="leftArrow"><![CDATA[<–]]></string>
+    <string name="rightArrow"><![CDATA[–>]]></string>
+    <string name="downArrow">| v</string>
+    <string name="initializing">Initializing</string>
+    <string name="abc">ABC</string>
+    <string name="initialHiddenBufferText">/</string>
 </resources>

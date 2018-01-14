@@ -2,9 +2,10 @@
 //TODO: redo mouse movement code
 //TODO: scroll doesn't work on non-standard windows
 //TODO: add option to exit server to system tray
-//TODO: fix logic for detecting backspace keyboard event
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: if app window is resized while connected to ip, and then user disconnects from that ip, it will no longer be able to connect to that ip again until app is restarted
+//TODO: add support for arrow keys
+//TODO: add support for emojis and non-ascii characters
 
 package ser421.asu.edu.mousecontrol;
 
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     int xSpeed = 0, ySpeed = 0;
     final int MOVEMENT_MIN = 100;
     final int SPEED = 20;
-    int previousBufLength = 0;
+    int previousBufLength = 1;
 
     EditText hiddenKeyBuffer;
 
@@ -288,6 +289,9 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (previousBufLength > hiddenKeyBuffer.getText().toString().length()){
                     keyboardBuf += "\\b";
+                    if (hiddenKeyBuffer.getText().toString().length() == 0){
+                        hiddenKeyBuffer.append("/");
+                    }
                 }else {
                     keyboardBuf += hiddenKeyBuffer.getText().toString().substring(previousBufLength);
                 }
@@ -313,10 +317,14 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         rescanButton.setOnClickListener(v -> {
             scan = true;
             initScanCounter = 0;
+            hideIPKeyboard();
         });
 
         View continueButton = findViewById(R.id.continueBtn);
-        continueButton.setOnClickListener(v -> scan = true);
+        continueButton.setOnClickListener(v -> {
+            scan = true;
+            hideIPKeyboard();
+        });
 
         View abcButton = findViewById(R.id.keyboardButton);
         abcButton.setOnClickListener(v -> showKeyBufferKeyboard());
@@ -665,10 +673,8 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             }
 
             keyboardBuf = "";
-            runOnUiThread(() -> {
-                hiddenKeyBuffer.setText("");
-            });
-            previousBufLength = 0;
+            runOnUiThread(() -> hiddenKeyBuffer.setText(""));
+            previousBufLength = 1;
             rightClick = false;
             mouseClick = false;
             doubleClick = false;
