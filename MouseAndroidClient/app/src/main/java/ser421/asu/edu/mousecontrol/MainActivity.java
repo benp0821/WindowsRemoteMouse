@@ -3,12 +3,9 @@
 //TODO: scroll doesn't work on non-standard windows
 //TODO: add option to exit server to system tray
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: if app window is resized while connected to ip, and then user disconnects from that ip, it will no longer be able to connect to that ip again until app is restarted
 //TODO: add support for arrow keys on keyboard
 //TODO: add toggle to make mouse arrow keys control keyboard arrow keys
 //TODO: add support for emojis and non-ascii characters
-//TODO: connecting to ip address causes backspace to be triggered for some reason
-//TODO: behaves weird if scan connects to ip while user has focus on ip text box
 
 package ser421.asu.edu.mousecontrol;
 
@@ -70,6 +67,7 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
     int previousBufLength = 1;
 
     EditText hiddenKeyBuffer;
+    TextWatcher hiddenTextWatcher;
 
     GestureDetector detector;
 
@@ -278,11 +276,8 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             return false;
         });
 
-        hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
-        hiddenKeyBuffer.setBackgroundColor(Color.TRANSPARENT);
-        hiddenKeyBuffer.setTextColor(Color.TRANSPARENT);
-        hiddenKeyBuffer.setCursorVisible(false);
-        hiddenKeyBuffer.addTextChangedListener(new TextWatcher() {
+
+        hiddenTextWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -308,7 +303,13 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 stt = new StopTypingTask();
                 t.schedule(stt, 100);
             }
-        });
+        };
+
+        hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.setBackgroundColor(Color.TRANSPARENT);
+        hiddenKeyBuffer.setTextColor(Color.TRANSPARENT);
+        hiddenKeyBuffer.setCursorVisible(false);
+        hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
         hiddenKeyBuffer.setOnEditorActionListener((textView, keyCode, event) -> {
             if (keyCode == EditorInfo.IME_ACTION_DONE) {
                 keyboardBuf = "\\n";
@@ -356,9 +357,36 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
             return false;
         });
 
+        System.out.println("onCreate() called");
         thread = new ClientThread();
         new Thread(thread).start();
     }
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        System.out.println("onStart() called");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        System.out.println("onPause() called");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        System.out.println("onResume() called");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        System.out.println("onStop() called");
+    }
+
 
     @Override
     public void onDestroy(){
@@ -368,18 +396,9 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("onDestroy() called");
     }
 
-    @Override
-    public void onBackPressed() {
-        //super.onBackPressed();
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finish();
-    }
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
@@ -675,13 +694,19 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                 runOnUiThread(() -> {
                     connectionStatusText.setText(String.format("%s %s", getString(R.string.ConnectedToText), serverip));
                     ClearFocusOnBackEditText ipTextBox = findViewById(R.id.ipAddrTxt);
-                    ipTextBox.setText(serverip);
+                    if (!ipTextBox.hasFocus()) {
+                        ipTextBox.setText(serverip);
+                    }
                 });
             }
 
-            keyboardBuf = "";
-            runOnUiThread(() -> hiddenKeyBuffer.setText(""));
-            previousBufLength = 1;
+            runOnUiThread(() -> {
+                keyboardBuf = "";
+                hiddenKeyBuffer.removeTextChangedListener(hiddenTextWatcher);
+                hiddenKeyBuffer.setText("/");
+                previousBufLength = 1;
+                hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
+            });
             rightClick = false;
             mouseClick = false;
             doubleClick = false;
@@ -699,10 +724,13 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
             try {
                 socket.close();
-                thread = new ClientThread();
-                new Thread(thread).start();
             } catch (Exception e) {
                 e.printStackTrace();
+            }finally{
+                if (!isDestroyed()) {
+                    thread = new ClientThread();
+                    new Thread(thread).start();
+                }
             }
             if (!scan) {
                 connectionStatusText.setText(R.string.failedConnectionText);
