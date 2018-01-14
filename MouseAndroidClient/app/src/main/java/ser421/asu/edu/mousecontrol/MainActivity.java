@@ -3,9 +3,9 @@
 //TODO: scroll doesn't work on non-standard windows
 //TODO: add option to exit server to system tray
 //TODO: fix logic for detecting backspace keyboard event
-//TODO: when wifi connection is lost, socket is not closed and device cannot reconnect when wifi is back
-//TODO: when app is opened with no wifi, it does not connect to wifi when it is available
-//TODO: voice control on keyboard causes problems with long sentences
+//TODO: voice control on keyboard causes problems (might be caused by backspace problem)
+//TODO: scroll left and right (two finger swipe)
+//TODO: switch from constraintlayout and make it work on all device sizes
 
 package ser421.asu.edu.mousecontrol;
 
@@ -40,6 +40,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity  implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
@@ -68,6 +70,23 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
     GestureDetector detector;
 
+    boolean sendPing = false;
+    Timer pingServer = new Timer();
+    class PingServerTask extends TimerTask {
+        public void run(){
+            sendPing = true;
+        }
+    }
+
+    boolean amTyping = false;
+    Timer t = new Timer();
+    class StopTypingTask extends TimerTask {
+        public void run() {
+            amTyping = false;
+        }
+    }
+    StopTypingTask stt = new StopTypingTask();
+
     private Socket socket;
     ClientThread thread;
 
@@ -79,6 +98,8 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        pingServer.schedule(new PingServerTask(), 5000, 5000);
 
         try {
             FileInputStream in = openFileInput("savedIP.txt");
@@ -266,18 +287,20 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (!hiddenKeyBuffer.getText().toString().equals("")) {
-                    if (previousBufLength > hiddenKeyBuffer.getText().toString().length()){
-                        keyboardBuf = "\\b";
-                    }else {
-                        keyboardBuf = hiddenKeyBuffer.getText().toString().substring(previousBufLength);
-                    }
-                    previousBufLength = hiddenKeyBuffer.getText().toString().length();
+                if (previousBufLength > hiddenKeyBuffer.getText().toString().length()){
+                    keyboardBuf += "\\b";
+                }else {
+                    keyboardBuf += hiddenKeyBuffer.getText().toString().substring(previousBufLength);
                 }
+                previousBufLength = hiddenKeyBuffer.getText().toString().length();
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                amTyping = true;
+                stt.cancel();
+                stt = new StopTypingTask();
+                t.schedule(stt, 100);
             }
         });
         hiddenKeyBuffer.setOnEditorActionListener((textView, keyCode, event) -> {
@@ -660,7 +683,11 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         Thread.sleep(30);
                     }
 
-                    if (!Objects.equals(keyboardBuf, "")){
+                    if (sendPing) {
+                        socket.getOutputStream().write(("g").getBytes());
+                        socket.getOutputStream().flush();
+                        sendPing = false;
+                    }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
                         socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
                         socket.getOutputStream().flush();
                         keyboardBuf = "";

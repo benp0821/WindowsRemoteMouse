@@ -142,6 +142,7 @@ int main(void)
 
 		SOCKET ListenSocket = INVALID_SOCKET;
 		SOCKET ClientSocket = INVALID_SOCKET;
+		int SOCKET_READ_TIMEOUT_SEC = 10;
 
 		struct addrinfo *result = NULL;
 		struct addrinfo hints;
@@ -210,75 +211,100 @@ int main(void)
 		closesocket(ListenSocket);
 
 		// Receive until the peer shuts down the connection
+		printf("Connection open\n");
 		int len;
 		do {
-
-			len = recv(ClientSocket, recvbuf, recvbuflen, 0);
-			if (len > 0) {
-				std::string tempX = "", tempY = "";
-				if (recvbuf[0] == 's') {
-					if (recvbuf[1] == 'd') {
-						scrollDown();
-					}
-					else if (recvbuf[1] == 'u') {
-						scrollUp();
-					}
-				}
-				else if (recvbuf[0] == 'c') {
-					mouseClick();
-				}
-				else if (recvbuf[0] == 'r') {
-					rightClick();
-				}
-				else if (recvbuf[0] == 'x') {
-					doubleClick();
-				}
-				else if (recvbuf[0] == 'd') {
-					mouseDragStart();
-				}
-				else if (recvbuf[0] == 'e') {
-					mouseDragEnd();
-				}
-				else if (recvbuf[0] == 'k') {
-					int counter = 1;
-					std::string message = "";
-					while (counter < len) {
-						message += recvbuf[counter];
-						counter++;
-					}
-					printBufferToActiveWindow(message);
-				}
-				else {
-					int counter = 0;
-					while (recvbuf[counter] != ' ') {
-						tempX += recvbuf[counter];
-						counter++;
-					}
-					counter++;
-					while (recvbuf[counter] != ';') {
-						tempY += recvbuf[counter];
-						counter++;
-					}
-					printf("x: %s y: %s\n", tempX.c_str(), tempY.c_str());
-					mouseMove(tempX, tempY);
-					
-				}
-			}
-			else if (len == 0)
-				printf("Connection closing...\n");
-			else {
+			fd_set set;
+			struct timeval timeout;
+			FD_ZERO(&set);
+			FD_SET(ClientSocket, &set);
+			timeout.tv_sec = SOCKET_READ_TIMEOUT_SEC;
+			timeout.tv_usec = 0;
+			int rv = select(ClientSocket + 1, &set, NULL, NULL, &timeout);
+			if (rv == SOCKET_ERROR)
+			{
 				printf("recv failed with error: %d\n", WSAGetLastError());
 				closesocket(ClientSocket);
 				WSACleanup();
 				return 1;
 			}
+			else if (rv == 0)
+			{
+				printf("timeout\n");
+				len = 0;
+			}
+			else
+			{
+				len = recv(ClientSocket, recvbuf, recvbuflen, 0);
+				if (len > 0) {
+					std::string tempX = "", tempY = "";
+					if (recvbuf[0] == 'g') {
+						printf("still connected\n");
+					}
+					else if (recvbuf[0] == 's') {
+						if (recvbuf[1] == 'd') {
+							scrollDown();
+						}
+						else if (recvbuf[1] == 'u') {
+							scrollUp();
+						}
+					}
+					else if (recvbuf[0] == 'c') {
+						mouseClick();
+					}
+					else if (recvbuf[0] == 'r') {
+						rightClick();
+					}
+					else if (recvbuf[0] == 'x') {
+						doubleClick();
+					}
+					else if (recvbuf[0] == 'd') {
+						mouseDragStart();
+					}
+					else if (recvbuf[0] == 'e') {
+						mouseDragEnd();
+					}
+					else if (recvbuf[0] == 'k') {
+						int counter = 1;
+						std::string message = "";
+						while (counter < len) {
+							message += recvbuf[counter];
+							counter++;
+						}
+						printBufferToActiveWindow(message);
+					}
+					else {
+						int counter = 0;
+						while (recvbuf[counter] != ' ') {
+							tempX += recvbuf[counter];
+							counter++;
+						}
+						counter++;
+						while (recvbuf[counter] != ';') {
+							tempY += recvbuf[counter];
+							counter++;
+						}
+						printf("x: %s y: %s\n", tempX.c_str(), tempY.c_str());
+						mouseMove(tempX, tempY);
 
+					}
+				}
+				else if (len == 0)
+					printf("Connection closing...\n");
+				else {
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closesocket(ClientSocket);
+					WSACleanup();
+					return 1;
+				}
+			}
 		} while (len > 0);
 
 		int err = (shutdown(ClientSocket, SD_SEND) == SOCKET_ERROR) ? 1 : 0;
 		if (err) {
 			printf("shutdown failed with error: %d\n", WSAGetLastError());
 		}
+		printf("Connection closed\n");
 		closesocket(ClientSocket);
 		WSACleanup();
 	}
