@@ -4,7 +4,6 @@
 //TODO: add option to exit server to system tray
 //TODO: fix logic for detecting backspace keyboard event
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: scroll left and right (two finger swipe)
 //TODO: switch from constraintlayout and make it work on all device sizes
 
 package ser421.asu.edu.mousecontrol;
@@ -467,6 +466,22 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                         }
                         transmitMovement = true;
                     }
+                }else if (event.getPointerCount() > 1 && event.getX(0) - prevX > 40 && event.getX(1) - prevX2 > 40 &&
+                        Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
+                    System.out.println("two finger scroll left");
+                    scroll = 4;
+                    prevX = event.getX(0);
+                    prevY = event.getY(0);
+                    prevX2 = event.getX(1);
+                    prevY2 = event.getY(1);
+                }else if (event.getPointerCount() > 1 && event.getX(0) - prevX < -40 && event.getX(1) - prevX2 < -40 &&
+                        Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
+                    System.out.println("two finger scroll right");
+                    scroll = 3;
+                    prevX = event.getX(0);
+                    prevY = event.getY(0);
+                    prevX2 = event.getX(1);
+                    prevY2 = event.getY(1);
                 }else if (event.getPointerCount() > 1 && event.getY(0) - prevY > 40 && event.getY(1) - prevY2 > 40) {
                     System.out.println("two finger scroll up");
                     scroll = 2;
@@ -697,6 +712,12 @@ public class MainActivity extends AppCompatActivity  implements GestureDetector.
                             socket.getOutputStream().flush();
                         }else if (scroll == 2){
                             socket.getOutputStream().write(("su").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (scroll == 3){
+                            socket.getOutputStream().write(("sr").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (scroll == 4){
+                            socket.getOutputStream().write(("sl").getBytes());
                             socket.getOutputStream().flush();
                         }
                         scroll = 0;

@@ -44,6 +44,24 @@ void scrollUp() {
 	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
 }
 
+void scrollLeft() {
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
+}
+
+void scrollRight() {
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
+}
+
 void printBufferToActiveWindow(std::string message) {
 	INPUT ip;
 	ip.type = INPUT_KEYBOARD;
@@ -247,6 +265,12 @@ int main(void)
 						}
 						else if (recvbuf[1] == 'u') {
 							scrollUp();
+						}
+						else if (recvbuf[1] == 'l') {
+							scrollLeft();
+						}
+						else if (recvbuf[1] == 'r') {
+							scrollRight();
 						}
 					}
 					else if (recvbuf[0] == 'c') {
