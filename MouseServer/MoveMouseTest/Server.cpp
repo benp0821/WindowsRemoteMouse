@@ -15,12 +15,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+#include <shellapi.h>
+#include <tchar.h>  
 
 #pragma comment (lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 200
 #define DEFAULT_PORT "27015"
 
+#define WM_MYMESSAGE (WM_USER + 1)
+#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
+
+static TCHAR szWindowClass[] = _T("win32app");
+static TCHAR szTitle[] = _T("");
+
+HMENU rightClickMenu;
 
 void mouseClick() {
 	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
@@ -151,10 +160,8 @@ void mouseMove(std::string xAmt, std::string yAmt) {
 	}
 }
 
-int main(void)
+DWORD WINAPI logicThread(__in LPVOID lpParameter)
 {
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
-
 	while (true) {
 		WSADATA wsaData;
 
@@ -188,7 +195,7 @@ int main(void)
 			return 1;
 		}
 
-	
+
 		// Create a SOCKET for connecting to server
 		ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 		if (ListenSocket == INVALID_SOCKET) {
@@ -332,4 +339,117 @@ int main(void)
 		closesocket(ClientSocket);
 		WSACleanup();
 	}
+	return 0;
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+		case WM_CREATE:
+			rightClickMenu = CreatePopupMenu();
+			AppendMenu(rightClickMenu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT("Exit"));
+		break;
+		case WM_MYMESSAGE:
+			switch (lParam)
+			{
+				case WM_LBUTTONDBLCLK:
+					MessageBox(NULL, L"Settings Window Not Yet Implemented", L"Not Implemented", MB_OK);
+				break;
+				case WM_RBUTTONDOWN:
+				{
+					POINT curPoint;
+					GetCursorPos(&curPoint);
+
+					SetForegroundWindow(hWnd);
+
+					UINT clicked = TrackPopupMenu(
+						rightClickMenu,
+						TPM_RETURNCMD | TPM_NONOTIFY,
+						curPoint.x,
+						curPoint.y,
+						0,
+						hWnd,
+						NULL
+					);
+
+					if (clicked == ID_TRAY_EXIT_CONTEXT_MENU_ITEM)
+					{
+						PostQuitMessage(0);
+					}
+				}
+				break;
+				case WM_DESTROY:
+					PostQuitMessage(0);
+				break;
+			};
+		break;
+	};
+	
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+{
+	WNDCLASSEX wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = NULL;
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = NULL;
+
+	if (!RegisterClassEx(&wcex))
+	{
+		return 1;
+	}
+
+	HWND hWnd = CreateWindow(
+		szWindowClass,
+		szTitle,
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		0, 0,
+		NULL,
+		NULL,
+		hInstance,
+		NULL
+	);
+	if (!hWnd)
+	{
+		return 1;
+	}
+
+	NOTIFYICONDATA nid;
+	ZeroMemory(&nid, sizeof(nid));
+	nid.cbSize = sizeof(NOTIFYICONDATA);
+	nid.hWnd = hWnd;
+	nid.uID = 100;
+	nid.uVersion = NOTIFYICON_VERSION;
+	nid.uCallbackMessage = WM_MYMESSAGE;
+	nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wcscpy_s(nid.szTip, L"Android Mouse Server");
+	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+
+	Shell_NotifyIcon(NIM_ADD, &nid);
+
+	HANDLE threadHandle;
+	DWORD threadid;
+	threadHandle = CreateThread(0, 0, logicThread, 0, 0, &threadid);
+
+	MSG msg;
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return 0;
 }

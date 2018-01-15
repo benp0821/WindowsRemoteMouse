@@ -1,21 +1,22 @@
 //TODO: add Pebble functionality
 //TODO: redo mouse movement code
 //TODO: scroll doesn't work on non-standard windows
-//TODO: add option to exit server to system tray
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: add support for arrow keys on keyboard
 //TODO: add toggle to make mouse arrow keys control keyboard arrow keys
 //TODO: add support for emojis and non-ascii characters
+//TODO: add EditText to specify port, add option to server window to specify port
+//TODO: add picture to system tray icon
 
 package ser421.asu.edu.mousecontrol;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.GestureDetector;
@@ -43,7 +44,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity  implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
+public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
     float prevX, prevY;
     float prevX2, prevY2;
