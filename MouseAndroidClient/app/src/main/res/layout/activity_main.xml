@@ -87,10 +87,11 @@
                 android:text="@string/leftArrow"
                 tools:text="&lt;&#8211;" />
 
-            <View
+            <Button
+                android:id="@+id/arrowToggleBtn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_gravity="fill"/>
+                android:layout_gravity="fill" />
 
             <Button
                 android:id="@+id/rightBtn"
@@ -161,7 +162,7 @@
     </android.widget.LinearLayout>
 
 
-    <EditText
+    <ser421.asu.edu.mousecontrol.SelectionChangedEditText
         android:id="@+id/hiddenKeyBuffer"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -169,5 +170,5 @@
         android:inputType="textNoSuggestions"
         android:text="@string/initialHiddenBufferText"
         android:hint=""
-        tools:text="/" />
+        tools:text="@string/initialHiddenBufferText" />
 </android.widget.LinearLayout>

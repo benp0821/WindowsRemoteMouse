@@ -91,6 +91,30 @@ void printBufferToActiveWindow(std::string message) {
 				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
 				i++;
 			}
+			else if (message[i + 1] == 'l') {
+				ip.ki.wVk = VK_LEFT;
+				ip.ki.wScan = MapVirtualKeyEx(VK_LEFT, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+				i++;
+			}
+			else if (message[i + 1] == 'r') {
+				ip.ki.wVk = VK_RIGHT;
+				ip.ki.wScan = MapVirtualKeyEx(VK_RIGHT, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+				i++;
+			}
+			else if (message[i + 1] == 'u') {
+				ip.ki.wVk = VK_UP;
+				ip.ki.wScan = MapVirtualKeyEx(VK_UP, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+				i++;
+			}
+			else if (message[i + 1] == 'd') {
+				ip.ki.wVk = VK_DOWN;
+				ip.ki.wScan = MapVirtualKeyEx(VK_DOWN, 0, GetKeyboardLayout(0));
+				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+				i++;
+			}
 			else {
 				ip.ki.dwFlags = KEYEVENTF_UNICODE;
 				ip.ki.wScan = message[i];

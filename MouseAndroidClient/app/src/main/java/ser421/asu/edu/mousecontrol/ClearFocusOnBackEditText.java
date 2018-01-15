@@ -18,8 +18,7 @@ public class ClearFocusOnBackEditText extends AppCompatEditText {
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            EditText ipTextBox = findViewById(R.id.ipAddrTxt);
-            ipTextBox.clearFocus();
+            clearFocus();
         }
         return super.onKeyPreIme(keyCode, event);
     }

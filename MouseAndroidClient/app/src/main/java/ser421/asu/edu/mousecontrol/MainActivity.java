@@ -2,11 +2,14 @@
 //TODO: redo mouse movement code
 //TODO: scroll doesn't work on non-standard windows
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: add support for arrow keys on keyboard
-//TODO: add toggle to make mouse arrow keys control keyboard arrow keys
+//TODO: add support for controlling arrow keys with arrow buttons when toggle is green
+//TODO: save the state of the green/red toggle button and restore it when the app opens
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
 //TODO: add picture to system tray icon
+//TODO: make server start on computer startup
+//TODO: add keyboard shortcuts (ctrl key, alt key, shift key toggle buttons)
+//TODO: add support for tab key
 
 package ser421.asu.edu.mousecontrol;
 
@@ -14,6 +17,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -57,7 +61,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     int scroll = 0;
     boolean newIP = false;
     boolean transmitMovement = false;
-    String keyboardBuf = "";
+    static String keyboardBuf = "";
     volatile boolean scan = true, initialScan = true;
     int initScanCounter = 1;
     boolean multiTouch = false;
@@ -65,9 +69,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     int xSpeed = 0, ySpeed = 0;
     final int MOVEMENT_MIN = 100;
     final int SPEED = 20;
-    int previousBufLength = 1;
+    int previousBufLength = 2;
+    boolean arrowsControlMouse = true;
+    static boolean ignoreLeftArrow = false;
 
-    EditText hiddenKeyBuffer;
+    SelectionChangedEditText hiddenKeyBuffer;
     TextWatcher hiddenTextWatcher;
 
     GestureDetector detector;
@@ -124,16 +130,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                ySpeed = -SPEED;
-                xSpeed = 0;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                ySpeed = 0;
-                xSpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ySpeed = -SPEED;
+                    xSpeed = 0;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    ySpeed = 0;
+                    xSpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -143,16 +151,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                ySpeed = SPEED;
-                xSpeed = 0;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                ySpeed = 0;
-                xSpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ySpeed = SPEED;
+                    xSpeed = 0;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    ySpeed = 0;
+                    xSpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -163,16 +173,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                xSpeed = -SPEED;
-                ySpeed = 0;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = -SPEED;
+                    ySpeed = 0;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -183,16 +195,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                xSpeed = SPEED;
-                ySpeed = 0;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = SPEED;
+                    ySpeed = 0;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -203,16 +217,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                xSpeed = -SPEED;
-                ySpeed = -SPEED;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = -SPEED;
+                    ySpeed = -SPEED;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -223,16 +239,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                xSpeed = SPEED;
-                ySpeed = -SPEED;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = SPEED;
+                    ySpeed = -SPEED;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -243,16 +261,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                xSpeed = -SPEED;
-                ySpeed = SPEED;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = -SPEED;
+                    ySpeed = SPEED;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
         });
@@ -263,18 +283,33 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             v.performClick();
 
             hideIPKeyboard();
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                xSpeed = SPEED;
-                ySpeed = SPEED;
-                transmitMovement = true;
-                return true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP ){
-                xSpeed = 0;
-                ySpeed = 0;
-                transmitMovement = false;
-                return true;
+            if (arrowsControlMouse) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    xSpeed = SPEED;
+                    ySpeed = SPEED;
+                    transmitMovement = true;
+                    return true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    transmitMovement = false;
+                    return true;
+                }
             }
             return false;
+        });
+
+
+        View arrowToggleButton = findViewById(R.id.arrowToggleBtn);
+        arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+        arrowToggleButton.setOnClickListener(v -> {
+            if (arrowsControlMouse){
+                arrowToggleButton.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
+                arrowsControlMouse = false;
+            }else{
+                arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+                arrowsControlMouse = true;
+            }
         });
 
 
@@ -286,15 +321,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (previousBufLength > hiddenKeyBuffer.getText().toString().length()){
+                if (previousBufLength + 2 > hiddenKeyBuffer.getText().toString().length()){
                     keyboardBuf += "\\b";
-                    if (hiddenKeyBuffer.getText().toString().length() == 0){
+                    if (hiddenKeyBuffer.getText().toString().length() == 3){
                         hiddenKeyBuffer.append("/");
+                        ignoreLeftArrow = true;
                     }
                 }else {
-                    keyboardBuf += hiddenKeyBuffer.getText().toString().substring(previousBufLength);
+                    keyboardBuf += hiddenKeyBuffer.getText().toString().substring(previousBufLength, hiddenKeyBuffer.getText().toString().length()-2);
                 }
-                previousBufLength = hiddenKeyBuffer.getText().toString().length();
+                previousBufLength = hiddenKeyBuffer.getText().toString().length()-2;
             }
 
             @Override
@@ -460,7 +496,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         if (imm != null) {
             imm.showSoftInput(hiddenKeyBuffer, InputMethodManager.SHOW_IMPLICIT);
         }
-        hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length());
+        hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length()-2);
     }
 
     @Override
@@ -702,12 +738,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             }
 
             runOnUiThread(() -> {
-                keyboardBuf = "";
                 hiddenKeyBuffer.removeTextChangedListener(hiddenTextWatcher);
-                hiddenKeyBuffer.setText("/");
-                previousBufLength = 1;
+                hiddenKeyBuffer.setText(getString(R.string.initialHiddenBufferText));
+                previousBufLength = 2;
                 hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
+                keyboardBuf = "";
             });
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             rightClick = false;
             mouseClick = false;
             doubleClick = false;

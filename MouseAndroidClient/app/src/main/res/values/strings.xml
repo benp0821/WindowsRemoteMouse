@@ -12,5 +12,5 @@
     <string name="downArrow">|\nv</string>
     <string name="initializing">Initializing</string>
     <string name="abc">ABC</string>
-    <string name="initialHiddenBufferText">/</string>
+    <string name="initialHiddenBufferText">////</string>
 </resources>
