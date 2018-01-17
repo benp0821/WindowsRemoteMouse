@@ -2,13 +2,13 @@
 //TODO: redo mouse movement code
 //TODO: scroll doesn't work on non-standard windows
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: add support for controlling arrow keys with arrow buttons when toggle is green
 //TODO: save the state of the green/red toggle button and restore it when the app opens
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
-//TODO: add picture to system tray icon
+//TODO: add picture to system tray icon, add icon for android app
 //TODO: make server start on computer startup
-//TODO: add keyboard shortcuts (ctrl key, alt key, shift key toggle buttons)
+//TODO: add keyboard buttons for ctrl, alt, shift, windows, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
+//TODO: add button to press that makes certain buttons held down when pressed
 //TODO: add support for tab key
 
 package ser421.asu.edu.mousecontrol;
@@ -72,6 +72,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     int previousBufLength = 2;
     boolean arrowsControlMouse = true;
     static boolean ignoreLeftArrow = false;
+    int keyDir = 0;
 
     SelectionChangedEditText hiddenKeyBuffer;
     TextWatcher hiddenTextWatcher;
@@ -142,6 +143,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     transmitMovement = false;
                     return true;
                 }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 1;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
+                }
             }
             return false;
         });
@@ -162,6 +169,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     xSpeed = 0;
                     transmitMovement = false;
                     return true;
+                }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 2;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
                 }
             }
             return false;
@@ -185,6 +198,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     transmitMovement = false;
                     return true;
                 }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 3;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
+                }
             }
             return false;
         });
@@ -206,6 +225,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     ySpeed = 0;
                     transmitMovement = false;
                     return true;
+                }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 4;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
                 }
             }
             return false;
@@ -229,6 +254,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     transmitMovement = false;
                     return true;
                 }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 5;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
+                }
             }
             return false;
         });
@@ -250,6 +281,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     ySpeed = 0;
                     transmitMovement = false;
                     return true;
+                }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 6;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
                 }
             }
             return false;
@@ -273,6 +310,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     transmitMovement = false;
                     return true;
                 }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 7;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
+                }
             }
             return false;
         });
@@ -294,6 +337,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     ySpeed = 0;
                     transmitMovement = false;
                     return true;
+                }
+            }else{
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    keyDir = 8;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    keyDir = 0;
                 }
             }
             return false;
@@ -797,6 +846,33 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
                         socket.getOutputStream().flush();
                         keyboardBuf = "";
+                    }else if (keyDir > 0){
+                        if (keyDir == 1){
+                            socket.getOutputStream().write(("k\\u").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 2){
+                            socket.getOutputStream().write(("k\\d").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 3){
+                            socket.getOutputStream().write(("k\\l").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 4){
+                            socket.getOutputStream().write(("k\\r").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 5){
+                            socket.getOutputStream().write(("k\\l\\u").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 6){
+                            socket.getOutputStream().write(("k\\r\\u").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 7){
+                            socket.getOutputStream().write(("k\\l\\d").getBytes());
+                            socket.getOutputStream().flush();
+                        }else if (keyDir == 8){
+                            socket.getOutputStream().write(("k\\r\\d").getBytes());
+                            socket.getOutputStream().flush();
+                        }
+                        Thread.sleep(100);
                     }else if (scroll != 0){
                         if (scroll == 1){
                             socket.getOutputStream().write(("sd").getBytes());
