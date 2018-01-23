@@ -1,6 +1,5 @@
 //TODO: add Pebble functionality
 //TODO: redo mouse movement code
-//TODO: scroll doesn't work on non-standard windows
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: save the state of the green/red toggle button and restore it when the app opens
 //TODO: add support for emojis and non-ascii characters

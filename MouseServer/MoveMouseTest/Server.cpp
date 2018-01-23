@@ -17,6 +17,7 @@
 #include <string>
 #include <shellapi.h>
 #include <tchar.h>  
+#include "resource.h"
 
 #pragma comment (lib, "Ws2_32.lib")
 
@@ -40,6 +41,10 @@ void scrollDown() {
 	HWND Handle;
 	GetCursorPos(&P);
 	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0xFF880000, lParam);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0xFF880000, lParam);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
 }
@@ -49,6 +54,10 @@ void scrollUp() {
 	HWND Handle;
 	GetCursorPos(&P);
 	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0x00780000, lParam);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0x00780000, lParam);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
 	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
 }
@@ -58,6 +67,10 @@ void scrollLeft() {
 	HWND Handle;
 	GetCursorPos(&P);
 	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0xFF880000, lParam);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0xFF880000, lParam);
 	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
 	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
 }
@@ -67,6 +80,10 @@ void scrollRight() {
 	HWND Handle;
 	GetCursorPos(&P);
 	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0x00780000, lParam);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0x00780000, lParam);
 	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
 	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
 }
@@ -458,7 +475,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	nid.uID = 100;
 	nid.uVersion = NOTIFYICON_VERSION;
 	nid.uCallbackMessage = WM_MYMESSAGE;
-	nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE("resources\\mouse_icon.png"), IMAGE_ICON, 16, 16, 0);
 	wcscpy_s(nid.szTip, L"Android Mouse Server");
 	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 
