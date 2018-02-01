@@ -168,6 +168,7 @@
         android:layout_height="0dp"
         android:ems="10"
         android:inputType="textNoSuggestions"
+        android:imeOptions="actionNext"
         android:text="@string/initialHiddenBufferText"
         android:hint=""
         tools:text="@string/initialHiddenBufferText" />

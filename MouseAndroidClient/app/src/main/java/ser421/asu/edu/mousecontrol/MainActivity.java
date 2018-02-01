@@ -1,14 +1,14 @@
 //TODO: add Pebble functionality
 //TODO: redo mouse movement code
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
-//TODO: save the state of the green/red toggle button and restore it when the app opens
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
 //TODO: add picture to system tray icon, add icon for android app
 //TODO: make server start on computer startup
-//TODO: add keyboard buttons for ctrl, alt, shift, windows, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
+//TODO: add keyboard buttons for tab, ctrl, alt, shift, windows, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
 //TODO: add button to press that makes certain buttons held down when pressed
-//TODO: add support for tab key
+//TODO: add left, right, and middle click buttons
+//TODO: add bluetooth support
 
 package ser421.asu.edu.mousecontrol;
 
@@ -73,6 +73,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     static boolean ignoreLeftArrow = false;
     int keyDir = 0;
 
+    View arrowToggleButton;
+
     SelectionChangedEditText hiddenKeyBuffer;
     TextWatcher hiddenTextWatcher;
 
@@ -119,6 +121,50 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         } catch (IOException e) {
             e.printStackTrace();
             initialScan = false;
+        }
+
+        arrowToggleButton = findViewById(R.id.arrowToggleBtn);
+        arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+        arrowToggleButton.setOnClickListener(v -> {
+            FileOutputStream outputStream;
+            if (arrowsControlMouse){
+                try {
+                    outputStream = openFileOutput("savedArrowPreference.txt", Context.MODE_PRIVATE);
+                    outputStream.write("keyboard".getBytes());
+                    arrowToggleButton.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
+                    arrowsControlMouse = false;
+                    outputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }else{
+                try {
+                    outputStream = openFileOutput("savedArrowPreference.txt", Context.MODE_PRIVATE);
+                    outputStream.write("mouse".getBytes());
+                    arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+                    arrowsControlMouse = true;
+                    outputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        try {
+            FileInputStream in = openFileInput("savedArrowPreference.txt");
+            InputStreamReader inputStreamReader = new InputStreamReader(in);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            String line = bufferedReader.readLine().trim();
+            if (line.equals("mouse")){
+                arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+                arrowsControlMouse = true;
+            }else{
+                arrowToggleButton.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
+                arrowsControlMouse = false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         detector = new GestureDetector(this, this);
@@ -347,20 +393,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             return false;
         });
 
-
-        View arrowToggleButton = findViewById(R.id.arrowToggleBtn);
-        arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
-        arrowToggleButton.setOnClickListener(v -> {
-            if (arrowsControlMouse){
-                arrowToggleButton.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
-                arrowsControlMouse = false;
-            }else{
-                arrowToggleButton.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
-                arrowsControlMouse = true;
-            }
-        });
-
-
         hiddenTextWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -396,7 +428,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         hiddenKeyBuffer.setCursorVisible(false);
         hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
         hiddenKeyBuffer.setOnEditorActionListener((textView, keyCode, event) -> {
-            if (keyCode == EditorInfo.IME_ACTION_DONE) {
+            if (keyCode == EditorInfo.IME_ACTION_NEXT) {
                 keyboardBuf = "\\n";
             }
             return true;
@@ -558,6 +590,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             case MotionEvent.ACTION_UP:
                 difX = 0;
                 difY = 0;
+                xSpeed = 0;
+                ySpeed = 0;
                 transmitMovement = false;
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -842,8 +876,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().flush();
                         sendPing = false;
                     }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
-                        socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
-                        socket.getOutputStream().flush();
+                        if (keyboardBuf.contains("\t")) {
+                            socket.getOutputStream().write(("k" + "\\t").getBytes());
+                            socket.getOutputStream().flush();
+                        }else {
+                            socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
+                            socket.getOutputStream().flush();
+                        }
                         keyboardBuf = "";
                     }else if (keyDir > 0){
                         if (keyDir == 1){

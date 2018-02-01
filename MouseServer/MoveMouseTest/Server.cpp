@@ -102,6 +102,13 @@ void printBufferToActiveWindow(std::string message) {
 				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
 				i++;
 			}
+			else if (message[i + 1] == 't') {
+				ip.ki.wVk = VK_TAB;
+				ip.ki.wScan = 0;
+				ip.ki.dwFlags = 0;
+				i++;
+
+			}
 			else if (message[i + 1] == 'b'){
 				ip.ki.wVk = VK_BACK;
 				ip.ki.wScan = MapVirtualKeyEx(VK_BACK, 0, GetKeyboardLayout(0));
@@ -174,30 +181,30 @@ void mouseMove(std::string xAmt, std::string yAmt) {
 		int resultX, resultY;
 		int directionX = 0, directionY = 0;
 		if (sscanf_s(xAmt.c_str(), "%d", &resultX) == 1) {
-			if (resultX < -5) {
-				directionX = -1;
+			if (abs(resultX) > 5) {
+				directionX = resultX / 5;
 			}
-			else if (resultX > 5) {
-				directionX = 1;
-			}
-			resultX = abs(resultX);
 		}
 		if (sscanf_s(yAmt.c_str(), "%d", &resultY) == 1) {
-			if (resultY < -5) {
-				directionY = -1;
+			if (abs(resultY) > 5) {
+				directionY = resultY / 5;
 			}
-			else if (resultY > 5) {
-				directionY = 1;
-			}
-			resultY = abs(resultY);
 		}
 
-		for (int i = 0; i < (resultX + resultY)/4; i++) {
-			SetCursorPos(p.x += directionX, p.y += directionY);
+		int i = 0;
+		while (i < abs(directionX) || i < abs(directionY)) {
+			if (i < abs(directionX) && i < abs(directionY)) {
+				SetCursorPos(p.x += directionX, p.y += directionY);
+			}
+			else if (i < abs(directionX)) {
+				SetCursorPos(p.x += directionX, p.y);
+			}
+			else if (i < abs(directionY)) {
+				SetCursorPos(p.x, p.y += directionY);
+			}
+			i++;
 			Sleep(1);
 		}
-		
-		
 	}
 }
 
