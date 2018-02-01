@@ -1,5 +1,4 @@
 //TODO: add Pebble functionality
-//TODO: redo mouse movement code
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
@@ -7,7 +6,7 @@
 //TODO: make server start on computer startup
 //TODO: add keyboard buttons for tab, ctrl, alt, shift, windows, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
 //TODO: add button to press that makes certain buttons held down when pressed
-//TODO: add left, right, and middle click buttons
+//TODO: add left, right, and middle click button
 //TODO: add bluetooth support
 
 package ser421.asu.edu.mousecontrol;
@@ -66,12 +65,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     boolean multiTouch = false;
     TextView connectionStatusText;
     int xSpeed = 0, ySpeed = 0;
-    final int MOVEMENT_MIN = 100;
+    final int MOVEMENT_MIN = 10;
     final int SPEED = 20;
     int previousBufLength = 2;
     boolean arrowsControlMouse = true;
     static boolean ignoreLeftArrow = false;
     int keyDir = 0;
+    boolean mouseKeyPressed = false;
 
     View arrowToggleButton;
 
@@ -178,14 +178,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    ySpeed = -SPEED;
+                    ySpeed = -SPEED / 2;
                     xSpeed = 0;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     ySpeed = 0;
                     xSpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -205,14 +207,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    ySpeed = SPEED;
+                    ySpeed = SPEED / 2;
                     xSpeed = 0;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     ySpeed = 0;
                     xSpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -233,14 +237,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED;
+                    xSpeed = -SPEED / 2;
                     ySpeed = 0;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -261,14 +267,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED;
+                    xSpeed = SPEED / 2;
                     ySpeed = 0;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -289,14 +297,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED;
-                    ySpeed = -SPEED;
+                    xSpeed = -SPEED / 2;
+                    ySpeed = -SPEED / 2;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -317,14 +327,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED;
-                    ySpeed = -SPEED;
+                    xSpeed = SPEED / 2;
+                    ySpeed = -SPEED / 2;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -345,14 +357,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED;
-                    ySpeed = SPEED;
+                    xSpeed = -SPEED / 2;
+                    ySpeed = SPEED / 2;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -373,14 +387,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             hideIPKeyboard();
             if (arrowsControlMouse) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED;
-                    ySpeed = SPEED;
+                    xSpeed = SPEED / 2;
+                    ySpeed = SPEED / 2;
                     transmitMovement = true;
+                    mouseKeyPressed = true;
                     return true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     xSpeed = 0;
                     ySpeed = 0;
                     transmitMovement = false;
+                    mouseKeyPressed = false;
                     return true;
                 }
             }else{
@@ -868,6 +884,10 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     if (transmitMovement) {
                         socket.getOutputStream().write((Math.round(xSpeed) + " " + Math.round(ySpeed) + ";").getBytes());
                         socket.getOutputStream().flush();
+                        if (!mouseKeyPressed){
+                            xSpeed = 0;
+                            ySpeed = 0;
+                        }
                         Thread.sleep(30);
                     }
 

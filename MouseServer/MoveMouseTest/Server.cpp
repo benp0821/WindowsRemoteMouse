@@ -191,8 +191,12 @@ void mouseMove(std::string xAmt, std::string yAmt) {
 			}
 		}
 
-		int i = 0;
-		while (i < abs(directionX) || i < abs(directionY)) {
+		for (int i = 0; i < 5; i++) {
+			SetCursorPos(p.x += directionX, p.y += directionY);
+			Sleep(5);
+		}
+
+		/*while (i < abs(directionX) || i < abs(directionY)) {
 			if (i < abs(directionX) && i < abs(directionY)) {
 				SetCursorPos(p.x += directionX, p.y += directionY);
 			}
@@ -204,7 +208,7 @@ void mouseMove(std::string xAmt, std::string yAmt) {
 			}
 			i++;
 			Sleep(1);
-		}
+		}*/
 	}
 }
 
