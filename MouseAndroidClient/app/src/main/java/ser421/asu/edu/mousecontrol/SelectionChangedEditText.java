@@ -1,9 +1,13 @@
 package ser421.asu.edu.mousecontrol;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.AppCompatEditText;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.Button;
 
 public class SelectionChangedEditText extends AppCompatEditText {
 
@@ -41,5 +45,13 @@ public class SelectionChangedEditText extends AppCompatEditText {
         if (getText().length() >= 4) {
             setSelection(getText().toString().length() - 2);
         }
+    }
+
+    @Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            MainActivity.setKeyboardToolbarVisiblity(context, false);
+        }
+        return super.onKeyPreIme(keyCode, event);
     }
 }

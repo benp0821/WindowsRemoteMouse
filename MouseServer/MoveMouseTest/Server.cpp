@@ -94,64 +94,99 @@ void printBufferToActiveWindow(std::string message) {
 	ip.ki.time = 0;
 	ip.ki.wVk = 0;
 	ip.ki.dwExtraInfo = 0;
-	for (int i = 0; i < message.length(); i++) {
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	bool ctrlPressed = false;
+	bool altPressed = false;
+	bool shiftPressed = false;
+	bool winPressed = false;
+
+	int counter = 0;
+	while (message[counter] != ':' && counter < message.length()) {
+		if (message[counter] == 'a') {
+			ctrlPressed = true;
+		}
+		else if (message[counter] == 'b') {
+			altPressed = true;
+		}
+		else if (message[counter] == 'c') {
+			shiftPressed = true;
+		}
+		else if (message[counter] == 'd') {
+			winPressed = true;
+		}
+		counter++;
+	}
+	counter++;
+
+	if (ctrlPressed) {
+		ip.ki.wVk = VK_CONTROL;
+		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	for (int i = counter; i < message.length(); i++) {
+		ip.ki.dwFlags = 0;
+		ip.ki.wScan = 0;
 		if (message[i] == '\\') {
 			if (message[i + 1] == 'n') {
 				ip.ki.wVk = VK_RETURN;
-				ip.ki.wScan = MapVirtualKeyEx(VK_RETURN, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
 				i++;
 			}
 			else if (message[i + 1] == 't') {
 				ip.ki.wVk = VK_TAB;
-				ip.ki.wScan = 0;
-				ip.ki.dwFlags = 0;
 				i++;
-
 			}
 			else if (message[i + 1] == 'b'){
 				ip.ki.wVk = VK_BACK;
-				ip.ki.wScan = MapVirtualKeyEx(VK_BACK, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY; 
 				i++;
 			}
 			else if (message[i + 1] == 'l') {
 				ip.ki.wVk = VK_LEFT;
-				ip.ki.wScan = MapVirtualKeyEx(VK_LEFT, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
 				i++;
 			}
 			else if (message[i + 1] == 'r') {
 				ip.ki.wVk = VK_RIGHT;
-				ip.ki.wScan = MapVirtualKeyEx(VK_RIGHT, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
 				i++;
 			}
 			else if (message[i + 1] == 'u') {
 				ip.ki.wVk = VK_UP;
-				ip.ki.wScan = MapVirtualKeyEx(VK_UP, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
 				i++;
 			}
 			else if (message[i + 1] == 'd') {
 				ip.ki.wVk = VK_DOWN;
-				ip.ki.wScan = MapVirtualKeyEx(VK_DOWN, 0, GetKeyboardLayout(0));
-				ip.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
 				i++;
+			}
+			else {
+				if (ctrlPressed) {
+					SHORT virtKey = VkKeyScan((TCHAR)message[i]);
+					ip.ki.wVk = LOBYTE(virtKey);
+				}
+				else {
+					ip.ki.dwFlags = KEYEVENTF_UNICODE;
+					ip.ki.wScan = message[i];
+				}
+			}
+		}
+		else {
+			if (ctrlPressed) {
+				SHORT virtKey = VkKeyScan((TCHAR)message[i]);
+				ip.ki.wVk = LOBYTE(virtKey);
 			}
 			else {
 				ip.ki.dwFlags = KEYEVENTF_UNICODE;
 				ip.ki.wScan = message[i];
 			}
 		}
-		else {
-			ip.ki.dwFlags = KEYEVENTF_UNICODE;
-			ip.ki.wScan = message[i];
-		}
-
+		
 		SendInput(1, &ip, sizeof(INPUT));
-
-		ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+		ip.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (ctrlPressed) {
+		ip.ki.wVk = VK_CONTROL;
+		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
+		ip.ki.dwFlags = KEYEVENTF_KEYUP;
 		SendInput(1, &ip, sizeof(INPUT));
 	}
 }

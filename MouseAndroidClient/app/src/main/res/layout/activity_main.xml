@@ -1,175 +1,219 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="ser421.asu.edu.mousecontrol.MainActivity"
-    android:focusable="true"
-    android:orientation="vertical"
-    android:focusableInTouchMode="true" >
+    android:id="@+id/frameLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
 
     <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        android:layout_height="match_parent"
+        tools:context="ser421.asu.edu.mousecontrol.MainActivity"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:focusableInTouchMode="true" >
 
         <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://schemas.android.com/tools"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="start">
+            android:orientation="horizontal"
+            android:gravity="center">
 
-            <ser421.asu.edu.mousecontrol.ClearFocusOnBackEditText
-                android:id="@+id/ipAddrTxt"
-                android:layout_width="match_parent"
+            <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:imeOptions="actionDone"
-                android:inputType="textPersonName"
-                android:selectAllOnFocus="true"
-                android:text="@string/ipPlaceholderText"/>
+                android:orientation="vertical"
+                android:gravity="start">
 
-            <Button
-                android:id="@+id/rescanBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/rescanText" />
+                <ser421.asu.edu.mousecontrol.ClearFocusOnBackEditText
+                    android:id="@+id/ipAddrTxt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPersonName"
+                    android:selectAllOnFocus="true"
+                    android:text="@string/ipPlaceholderText"/>
 
-            <Button
-                android:id="@+id/continueBtn"
-                android:layout_width="match_parent"
+                <Button
+                    android:id="@+id/rescanBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rescanText" />
+
+                <Button
+                    android:id="@+id/continueBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/continueScanText"/>
+
+                <TextView
+                    android:id="@+id/connectionStatusTxt"
+                    android:layout_width="175dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginStart="2dp"
+                    android:text="@string/initializing" />
+
+            </android.widget.LinearLayout>
+
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight=".1"
+                android:layout_gravity="fill"/>
+
+            <android.widget.GridLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/continueScanText"/>
+                android:columnCount="3"
+                android:rowCount="3">
+
+                <Button
+                    android:id="@+id/leftUpBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/upBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"
+                    android:text="@string/upArrow"
+                    tools:text="^\n|" />
+
+                <Button
+                    android:id="@+id/rightUpBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/leftBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"
+                    android:text="@string/leftArrow"
+                    tools:text="&lt;&#8211;" />
+
+                <Button
+                    android:id="@+id/arrowToggleBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill" />
+
+                <Button
+                    android:id="@+id/rightBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"
+                    android:text="@string/rightArrow"
+                    tools:text="&#8211;&gt;" />
+
+                <Button
+                    android:id="@+id/leftDownBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/downBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"
+                    android:text="@string/downArrow"
+                    tools:text="|\nv" />
+
+                <Button
+                    android:id="@+id/rightDownBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+            </android.widget.GridLayout>
 
         </android.widget.LinearLayout>
 
         <View
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
             android:layout_weight=".1"
             android:layout_gravity="fill"/>
 
-        <android.widget.GridLayout
-            android:layout_width="wrap_content"
+        <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:columnCount="3"
-            android:rowCount="3">
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight=".1"
+                android:layout_gravity="bottom"/>
 
             <Button
-                android:id="@+id/leftUpBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"/>
+                android:id="@+id/keyboardButton"
+                android:layout_width="55dp"
+                android:layout_height="wrap_content"
+                android:text="@string/abc" />
 
-            <Button
-                android:id="@+id/upBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"
-                android:text="@string/upArrow"
-                tools:text="^\n|" />
+        </android.widget.LinearLayout>
 
-            <Button
-                android:id="@+id/rightUpBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"/>
 
-            <Button
-                android:id="@+id/leftBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"
-                android:text="@string/leftArrow"
-                tools:text="&lt;&#8211;" />
-
-            <Button
-                android:id="@+id/arrowToggleBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill" />
-
-            <Button
-                android:id="@+id/rightBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"
-                android:text="@string/rightArrow"
-                tools:text="&#8211;&gt;" />
-
-            <Button
-                android:id="@+id/leftDownBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"/>
-
-            <Button
-                android:id="@+id/downBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"
-                android:text="@string/downArrow"
-                tools:text="|\nv" />
-
-            <Button
-                android:id="@+id/rightDownBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="fill"/>
-
-        </android.widget.GridLayout>
-
+        <ser421.asu.edu.mousecontrol.SelectionChangedEditText
+            android:id="@+id/hiddenKeyBuffer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ems="10"
+            android:inputType="textNoSuggestions"
+            android:imeOptions="actionNext"
+            android:text="@string/initialHiddenBufferText"
+            android:hint=""
+            tools:text="@string/initialHiddenBufferText" />
     </android.widget.LinearLayout>
-
-    <View
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight=".1"
-        android:layout_gravity="fill"/>
 
     <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/connectionStatusTxt"
-            android:layout_width="175dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="2dp"
-            android:layout_marginStart="2dp"
-            android:text="@string/initializing" />
-
-        <View
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_weight=".1"
-            android:layout_gravity="bottom"/>
+        android:layout_gravity="bottom">
 
         <Button
-            android:id="@+id/keyboardButton"
-            android:layout_width="55dp"
+            android:id="@+id/ctrlBtn"
+            android:layout_width="60dp"
             android:layout_height="wrap_content"
-            android:text="@string/abc" />
+            android:layout_gravity="bottom"
+            android:text="@string/ctrl" />
 
+        <Button
+            android:id="@+id/altBtn"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="@string/alt" />
+
+        <Button
+            android:id="@+id/shiftBtn"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="@string/shift" />
+
+        <Button
+            android:id="@+id/winBtn"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="@string/windows" />
     </android.widget.LinearLayout>
 
-
-    <ser421.asu.edu.mousecontrol.SelectionChangedEditText
-        android:id="@+id/hiddenKeyBuffer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:ems="10"
-        android:inputType="textNoSuggestions"
-        android:imeOptions="actionNext"
-        android:text="@string/initialHiddenBufferText"
-        android:hint=""
-        tools:text="@string/initialHiddenBufferText" />
-</android.widget.LinearLayout>
+</FrameLayout>

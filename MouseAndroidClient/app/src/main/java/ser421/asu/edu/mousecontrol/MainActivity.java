@@ -3,11 +3,13 @@
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
 //TODO: add picture to system tray icon, add icon for android app
-//TODO: make server start on computer startup
-//TODO: add keyboard buttons for tab, ctrl, alt, shift, windows, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
-//TODO: add button to press that makes certain buttons held down when pressed
+//TODO: make server start on computer startup (option in settings window)
+//TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
+//TODO: make alt, shift, windows do something
 //TODO: add left, right, and middle click button
 //TODO: add bluetooth support
+//TODO: sometimes app crashes when exiting keyboard (by pressing back)
+//TODO: add option to keep keyboard pinned open even when controlling mouse and other commands (make ctrl work for arrows in keyboard mode when keyboard is pinned open)
 
 package ser421.asu.edu.mousecontrol;
 
@@ -16,6 +18,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -26,6 +29,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,33 +55,37 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     float prevX, prevY;
     float prevX2, prevY2;
     float difX = 0, difY = 0;
+    int xSpeed = 0, ySpeed = 0;
+    int scroll = 0;
+    int previousBufLength = 2;
+    int keyDir = 0;
+    final int MOVEMENT_MIN = 10;
+    final int SPEED = 20;
     boolean mouseClick = false;
     boolean rightClick = false;
     boolean mouseDragStart = false, mouseDrag = false, mouseDragEnd = false;
     boolean doubleClick = false;
-    float doubleClickInitX = 0, doubleClickInitY = 0;
-    int scroll = 0;
     boolean newIP = false;
     boolean transmitMovement = false;
+    boolean multiTouch = false;
+    boolean arrowsControlMouse = true;
+    boolean mouseKeyPressed = false;
+    static boolean ctrlPressed = false, altPressed = false, shiftPressed = false, winPressed = false;
+    static boolean ignoreLeftArrow = false;
+    float doubleClickInitX = 0, doubleClickInitY = 0;
     static String keyboardBuf = "";
+
     volatile boolean scan = true, initialScan = true;
     int initScanCounter = 1;
-    boolean multiTouch = false;
+    private Socket socket;
+    ClientThread thread;
+    private static final int SERVERPORT = 27015;
+    private static String serverip = "1.1.1.1";
+
     TextView connectionStatusText;
-    int xSpeed = 0, ySpeed = 0;
-    final int MOVEMENT_MIN = 10;
-    final int SPEED = 20;
-    int previousBufLength = 2;
-    boolean arrowsControlMouse = true;
-    static boolean ignoreLeftArrow = false;
-    int keyDir = 0;
-    boolean mouseKeyPressed = false;
-
-    View arrowToggleButton;
-
+    Button arrowToggleButton;
     SelectionChangedEditText hiddenKeyBuffer;
     TextWatcher hiddenTextWatcher;
-
     GestureDetector detector;
 
     boolean sendPing = false;
@@ -97,11 +105,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     }
     StopTypingTask stt = new StopTypingTask();
 
-    private Socket socket;
-    ClientThread thread;
 
-    private static final int SERVERPORT = 27015;
-    private static String serverip = "1.1.1.1";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -409,6 +413,50 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             return false;
         });
 
+        Button ctrlBtn = findViewById(R.id.ctrlBtn);
+        ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        ctrlBtn.setOnClickListener(v -> {
+            ctrlPressed = !ctrlPressed;
+            if (ctrlPressed){
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            }else{
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+        });
+
+        Button altBtn = findViewById(R.id.altBtn);
+        altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        altBtn.setOnClickListener(v -> {
+            altPressed = !altPressed;
+            if (altPressed){
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            }else{
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+        });
+
+        Button shiftBtn = findViewById(R.id.shiftBtn);
+        shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        shiftBtn.setOnClickListener(v -> {
+            shiftPressed = !shiftPressed;
+            if (shiftPressed){
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            }else{
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+        });
+
+        Button winBtn = findViewById(R.id.winBtn);
+        winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        winBtn.setOnClickListener(v -> {
+            winPressed = !winPressed;
+            if (winPressed){
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            }else{
+                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+        });
+
         hiddenTextWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -489,6 +537,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             }
             return false;
         });
+        ipTextBox.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus){
+                setKeyboardToolbarVisiblity(this, false);
+            }
+        });
+
+        setKeyboardToolbarVisiblity(this, false);
 
         System.out.println("onCreate() called");
         thread = new ClientThread();
@@ -512,6 +567,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     public void onResume() {
         super.onResume();
         System.out.println("onResume() called");
+
+        setKeyboardToolbarVisiblity(this, false);
     }
 
     @Override
@@ -576,6 +633,39 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         return false;
     }
 
+    public static void setKeyboardToolbarVisiblity(Context context, boolean isVisible){
+        Button abcButton = ((Activity)context).findViewById(R.id.keyboardButton);
+        Button ctrlBtn = ((Activity)context).findViewById(R.id.ctrlBtn);
+        Button altBtn = ((Activity)context).findViewById(R.id.altBtn);
+        Button shiftBtn = ((Activity)context).findViewById(R.id.shiftBtn);
+        Button winBtn = ((Activity)context).findViewById(R.id.winBtn);
+
+        if (isVisible){
+            abcButton.setVisibility(View.INVISIBLE);
+            ctrlBtn.setVisibility(View.VISIBLE);
+            altBtn.setVisibility(View.VISIBLE);
+            shiftBtn.setVisibility(View.VISIBLE);
+            winBtn.setVisibility(View.VISIBLE);
+        }else{
+            abcButton.setVisibility(View.VISIBLE);
+            ctrlBtn.setVisibility(View.INVISIBLE);
+            altBtn.setVisibility(View.INVISIBLE);
+            shiftBtn.setVisibility(View.INVISIBLE);
+            winBtn.setVisibility(View.INVISIBLE);
+
+            ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+            ctrlPressed = false;
+            altPressed = false;
+            shiftPressed = false;
+            winPressed = false;
+
+        }
+    }
+
     public void hideIPKeyboard(){
         EditText ipTextBox = findViewById(R.id.ipAddrTxt);
         ipTextBox.clearFocus();
@@ -583,6 +673,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         if (mgr != null) {
             mgr.hideSoftInputFromWindow(ipTextBox.getWindowToken(), 0);
         }
+
+        setKeyboardToolbarVisiblity(this, false);
     }
 
     public void showKeyBufferKeyboard(){
@@ -593,6 +685,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             imm.showSoftInput(hiddenKeyBuffer, InputMethodManager.SHOW_IMPLICIT);
         }
         hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length()-2);
+
+        setKeyboardToolbarVisiblity(this, true);
     }
 
     @Override
@@ -896,38 +990,63 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().flush();
                         sendPing = false;
                     }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
+                        String writeParams = "k";
+                        if (ctrlPressed){
+                            writeParams += "a";
+                            ctrlPressed = false;
+                            Button ctrlBtn = findViewById(R.id.ctrlBtn);
+                            ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                        }
+                        if (altPressed){
+                            writeParams += "b";
+                            altPressed = false;
+                            Button altBtn = findViewById(R.id.altBtn);
+                            altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                        }
+                        if (shiftPressed){
+                            writeParams += "c";
+                            shiftPressed = false;
+                            Button shiftBtn = findViewById(R.id.shiftBtn);
+                            shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                        }
+                        if (winPressed){
+                            writeParams += "d";
+                            winPressed = false;
+                            Button winBtn = findViewById(R.id.winBtn);
+                            winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                        }
                         if (keyboardBuf.contains("\t")) {
-                            socket.getOutputStream().write(("k" + "\\t").getBytes());
+                            socket.getOutputStream().write((writeParams + ":" + "\\t").getBytes());
                             socket.getOutputStream().flush();
                         }else {
-                            socket.getOutputStream().write(("k" + keyboardBuf).getBytes());
+                            socket.getOutputStream().write((writeParams + ":" + keyboardBuf).getBytes());
                             socket.getOutputStream().flush();
                         }
                         keyboardBuf = "";
                     }else if (keyDir > 0){
                         if (keyDir == 1){
-                            socket.getOutputStream().write(("k\\u").getBytes());
+                            socket.getOutputStream().write(("k:\\u").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 2){
-                            socket.getOutputStream().write(("k\\d").getBytes());
+                            socket.getOutputStream().write(("k:\\d").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 3){
-                            socket.getOutputStream().write(("k\\l").getBytes());
+                            socket.getOutputStream().write(("k:\\l").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 4){
-                            socket.getOutputStream().write(("k\\r").getBytes());
+                            socket.getOutputStream().write(("k:\\r").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 5){
-                            socket.getOutputStream().write(("k\\l\\u").getBytes());
+                            socket.getOutputStream().write(("k:\\l\\u").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 6){
-                            socket.getOutputStream().write(("k\\r\\u").getBytes());
+                            socket.getOutputStream().write(("k:\\r\\u").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 7){
-                            socket.getOutputStream().write(("k\\l\\d").getBytes());
+                            socket.getOutputStream().write(("k:\\l\\d").getBytes());
                             socket.getOutputStream().flush();
                         }else if (keyDir == 8){
-                            socket.getOutputStream().write(("k\\r\\d").getBytes());
+                            socket.getOutputStream().write(("k:\\r\\d").getBytes());
                             socket.getOutputStream().flush();
                         }
                         Thread.sleep(100);
