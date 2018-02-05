@@ -5,11 +5,11 @@
 //TODO: add picture to system tray icon, add icon for android app
 //TODO: make server start on computer startup (option in settings window)
 //TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
-//TODO: make alt, shift, windows do something
 //TODO: add left, right, and middle click button
 //TODO: add bluetooth support
 //TODO: sometimes app crashes when exiting keyboard (by pressing back)
 //TODO: add option to keep keyboard pinned open even when controlling mouse and other commands (make ctrl work for arrows in keyboard mode when keyboard is pinned open)
+//TODO: implicitly make mouse cursor visible on any input
 
 package ser421.asu.edu.mousecontrol;
 
@@ -454,6 +454,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
             }else{
                 v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                keyboardBuf = "\\w";
             }
         });
 
@@ -909,6 +910,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     InetSocketAddress serverAddr = new InetSocketAddress(serverip, SERVERPORT);
                     socket = new Socket();
                     socket.connect(serverAddr, 2000);
+                    FileOutputStream outputStream;
+                    try {
+                        outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
+                        outputStream.write(serverip.getBytes());
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                 } catch (Exception e1) {
                     e1.printStackTrace();
@@ -968,7 +977,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 }
             }
             if (!scan) {
-                connectionStatusText.setText(R.string.failedConnectionText);
+                runOnUiThread(() -> connectionStatusText.setText(R.string.failedConnectionText));
             }
         }
 

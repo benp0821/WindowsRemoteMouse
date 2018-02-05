@@ -125,6 +125,21 @@ void printBufferToActiveWindow(std::string message) {
 		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
 		SendInput(1, &ip, sizeof(INPUT));
 	}
+	if (altPressed) {
+		ip.ki.wVk = VK_MENU;
+		ip.ki.wScan = MapVirtualKey(VK_MENU, 0);
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (shiftPressed) {
+		ip.ki.wVk = VK_SHIFT;
+		ip.ki.wScan = MapVirtualKey(VK_SHIFT, 0);
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (winPressed) {
+		ip.ki.wVk = VK_LWIN;
+		ip.ki.wScan = MapVirtualKey(VK_LWIN, 0);
+		SendInput(1, &ip, sizeof(INPUT));
+	}
 	for (int i = counter; i < message.length(); i++) {
 		ip.ki.dwFlags = 0;
 		ip.ki.wScan = 0;
@@ -157,8 +172,12 @@ void printBufferToActiveWindow(std::string message) {
 				ip.ki.wVk = VK_DOWN;
 				i++;
 			}
+			else if (message[i + 1] == 'w') {
+				ip.ki.wVk = VK_LWIN;
+				i++;
+			}
 			else {
-				if (ctrlPressed) {
+				if (ctrlPressed || altPressed || shiftPressed || winPressed) {
 					SHORT virtKey = VkKeyScan((TCHAR)message[i]);
 					ip.ki.wVk = LOBYTE(virtKey);
 				}
@@ -169,7 +188,7 @@ void printBufferToActiveWindow(std::string message) {
 			}
 		}
 		else {
-			if (ctrlPressed) {
+			if (ctrlPressed || altPressed || shiftPressed || winPressed) {
 				SHORT virtKey = VkKeyScan((TCHAR)message[i]);
 				ip.ki.wVk = LOBYTE(virtKey);
 			}
@@ -186,6 +205,24 @@ void printBufferToActiveWindow(std::string message) {
 	if (ctrlPressed) {
 		ip.ki.wVk = VK_CONTROL;
 		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
+		ip.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (altPressed) {
+		ip.ki.wVk = VK_MENU;
+		ip.ki.wScan = MapVirtualKey(VK_MENU, 0);
+		ip.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (shiftPressed) {
+		ip.ki.wVk = VK_SHIFT;
+		ip.ki.wScan = MapVirtualKey(VK_SHIFT, 0);
+		ip.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &ip, sizeof(INPUT));
+	}
+	if (winPressed) {
+		ip.ki.wVk = VK_LWIN;
+		ip.ki.wScan = MapVirtualKey(VK_LWIN, 0);
 		ip.ki.dwFlags = KEYEVENTF_KEYUP;
 		SendInput(1, &ip, sizeof(INPUT));
 	}
