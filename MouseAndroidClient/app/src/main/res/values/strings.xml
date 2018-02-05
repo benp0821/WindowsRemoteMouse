@@ -17,4 +17,5 @@
     <string name="alt">ALT</string>
     <string name="shift">SHIFT</string>
     <string name="windows">WIN</string>
+    <string name="pin">PIN</string>
 </resources>
