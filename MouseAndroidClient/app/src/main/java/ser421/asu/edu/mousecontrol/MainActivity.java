@@ -7,7 +7,9 @@
 //TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
 //TODO: add left, right, and middle click button
 //TODO: add bluetooth support
+//TODO: closing keyboard sometimes crashes app
 //TODO: make mod keys work with mouse inputs as well
+//TODO: make arrow buttons for keyboard work when held down again
 
 package ser421.asu.edu.mousecontrol;
 
@@ -56,7 +58,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     int xSpeed = 0, ySpeed = 0;
     int scroll = 0;
     int previousBufLength = 2;
-    int keyDir = 0;
     final int MOVEMENT_MIN = 10;
     final int SPEED = 20;
     boolean mouseClick = false;
@@ -176,296 +177,73 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         View up = findViewById(R.id.upBtn);
         up.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    ySpeed = -SPEED / 2;
-                    xSpeed = 0;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    ySpeed = 0;
-                    xSpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 1;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, 0, -SPEED/2, 1);
+            return true;
         });
-
         View down = findViewById(R.id.downBtn);
         down.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    ySpeed = SPEED / 2;
-                    xSpeed = 0;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    ySpeed = 0;
-                    xSpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 2;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, 0, SPEED/2, 2);
+            return true;
         });
-
-
         View left = findViewById(R.id.leftBtn);
         left.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED / 2;
-                    ySpeed = 0;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 3;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, -SPEED/2, 0, 3);
+            return true;
         });
-
-
         View right = findViewById(R.id.rightBtn);
         right.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED / 2;
-                    ySpeed = 0;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 4;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, SPEED/2, 0, 4);
+            return true;
         });
-
-
         View leftUp = findViewById(R.id.leftUpBtn);
         leftUp.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED / 2;
-                    ySpeed = -SPEED / 2;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 5;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, -SPEED/2, -SPEED/2, 5);
+            return true;
         });
-
-
         View rightUp = findViewById(R.id.rightUpBtn);
         rightUp.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED / 2;
-                    ySpeed = -SPEED / 2;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 6;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, SPEED/2, -SPEED/2, 6);
+            return true;
         });
-
-
         View leftDown = findViewById(R.id.leftDownBtn);
         leftDown.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = -SPEED / 2;
-                    ySpeed = SPEED / 2;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 7;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, -SPEED/2, SPEED/2, 7);
+            return true;
         });
-
-
         View rightDown = findViewById(R.id.rightDownBtn);
         rightDown.setOnTouchListener((v, event) -> {
             v.performClick();
-
-            hideIPKeyboard();
-            if (arrowsControlMouse) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    xSpeed = SPEED / 2;
-                    ySpeed = SPEED / 2;
-                    transmitMovement = true;
-                    mouseKeyPressed = true;
-                    return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    transmitMovement = false;
-                    mouseKeyPressed = false;
-                    return true;
-                }
-            }else{
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    keyDir = 8;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    keyDir = 0;
-                }
-            }
-            return false;
+            arrowButtonPressed(event, SPEED/2, SPEED/2, 8);
+            return true;
         });
 
         Button ctrlBtn = findViewById(R.id.ctrlBtn);
-        ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-        ctrlBtn.setOnClickListener(v -> {
-            ctrlPressed = !ctrlPressed;
-            if (ctrlPressed){
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else{
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-            }
-        });
-
         Button altBtn = findViewById(R.id.altBtn);
-        altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-        altBtn.setOnClickListener(v -> {
-            altPressed = !altPressed;
-            if (altPressed){
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else{
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-            }
-        });
-
         Button shiftBtn = findViewById(R.id.shiftBtn);
-        shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-        shiftBtn.setOnClickListener(v -> {
-            shiftPressed = !shiftPressed;
-            if (shiftPressed){
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else{
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-            }
-        });
-
         Button winBtn = findViewById(R.id.winBtn);
+        Button pinBtn = findViewById(R.id.pinBtn);
+        ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
         winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        pinBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+        ctrlBtn.setOnClickListener(v -> ctrlPressed = toggleKeyPressed(v, ctrlPressed));
+        altBtn.setOnClickListener(v -> altPressed = toggleKeyPressed(v, altPressed));
+        shiftBtn.setOnClickListener(v -> shiftPressed = toggleKeyPressed(v, shiftPressed));
         winBtn.setOnClickListener(v -> {
-            winPressed = !winPressed;
-            if (winPressed){
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else{
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            winPressed = toggleKeyPressed(v, winPressed);
+            if (!winPressed){
                 keyboardBuf = "\\w";
             }
         });
-
-        Button pinBtn = findViewById(R.id.pinBtn);
-        pinBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-        pinBtn.setOnClickListener(v -> {
-            keyboardPinned = !keyboardPinned;
-            if (keyboardPinned){
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else{
-                v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-            }
-        });
+        pinBtn.setOnClickListener(v -> keyboardPinned = toggleKeyPressed(v, keyboardPinned));
 
 
         hiddenTextWatcher = new TextWatcher() {
@@ -561,17 +339,58 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         new Thread(thread).start();
     }
 
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        System.out.println("onStart() called");
+    public boolean toggleKeyPressed(View v, boolean isPressed){
+        if (!isPressed){
+            v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+        }else{
+            v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        }
+        return !isPressed;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        System.out.println("onPause() called");
+    public void arrowButtonPressed(MotionEvent event, int xSpeed, int ySpeed, int keyDir){
+        hideIPKeyboard();
+        if (arrowsControlMouse) {
+            arrowMouseButtonEvent(event, xSpeed, ySpeed);
+        }else{
+            arrowKeyboardButtonEvent(event, keyDir);
+        }
+    }
+
+    public void arrowMouseButtonEvent(MotionEvent event, int xSpeed, int ySpeed){
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            this.xSpeed = xSpeed;
+            this.ySpeed = ySpeed;
+            transmitMovement = true;
+            mouseKeyPressed = true;
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            this.xSpeed = 0;
+            this.ySpeed = 0;
+            transmitMovement = false;
+            mouseKeyPressed = false;
+        }
+    }
+
+    public void arrowKeyboardButtonEvent(MotionEvent event, int keyDir){
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (keyDir == 1){
+                keyboardBuf = "\\u";
+            }else if (keyDir == 2){
+                keyboardBuf = "\\d";
+            }else if (keyDir == 3){
+                keyboardBuf = "\\l";
+            }else if (keyDir == 4){
+                keyboardBuf = "\\r";
+            }else if (keyDir == 5){
+                keyboardBuf = "\\l\\u";
+            }else if (keyDir == 6){
+                keyboardBuf = "\\r\\u";
+            }else if (keyDir == 7){
+                keyboardBuf = "\\l\\d";
+            }else if (keyDir == 8){
+                keyboardBuf = "\\r\\d";
+            }
+        }
     }
 
     @Override
@@ -581,13 +400,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
         setKeyboardToolbarVisiblity(this, false);
     }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        System.out.println("onStop() called");
-    }
-
 
     @Override
     public void onDestroy(){
@@ -614,6 +426,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
         return false;
     }
+
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         if (!multiTouch) {
@@ -824,6 +637,17 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         return false;
     }
 
+    public void writeIpToFile(){
+        FileOutputStream outputStream;
+        try {
+            outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
+            outputStream.write(serverip.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     class ClientThread implements Runnable {
 
         @Override
@@ -877,7 +701,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         e.printStackTrace();
                     }
                 }
-                //String ipString = Formatter.formatIpAddress(ipAddress);
                 String prefix;
                 if (ipString != null) {
                     prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1);
@@ -903,15 +726,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             socket.connect(serverAddr, 500);
                             scan = false;
                             serverip = ip;
-
-                            FileOutputStream outputStream;
-                            try {
-                                outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
-                                outputStream.write(serverip.getBytes());
-                                outputStream.close();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                            writeIpToFile();
                         }catch (ConnectException e){
                             e.printStackTrace();
                             socket.close();
@@ -927,14 +742,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     InetSocketAddress serverAddr = new InetSocketAddress(serverip, SERVERPORT);
                     socket = new Socket();
                     socket.connect(serverAddr, 2000);
-                    FileOutputStream outputStream;
-                    try {
-                        outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
-                        outputStream.write(serverip.getBytes());
-                        outputStream.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    writeIpToFile();
 
                 } catch (Exception e1) {
                     e1.printStackTrace();
@@ -998,6 +806,41 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             }
         }
 
+        String applyModifiers(String initString){
+            String writeParams = initString;
+            if (ctrlPressed){
+                writeParams += "a";
+                if (!keyboardBuf.contains("\\l") && !keyboardBuf.contains("\\r") && !keyboardBuf.contains("\\u") && !keyboardBuf.contains("\\d")) {
+                    ctrlPressed = false;
+                    Button ctrlBtn = findViewById(R.id.ctrlBtn);
+                    ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                }else if (altPressed || shiftPressed || winPressed){
+                    ctrlPressed = false;
+                    Button ctrlBtn = findViewById(R.id.ctrlBtn);
+                    ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+                }
+            }
+            if (altPressed){
+                writeParams += "b";
+                altPressed = false;
+                Button altBtn = findViewById(R.id.altBtn);
+                altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+            if (shiftPressed){
+                writeParams += "c";
+                shiftPressed = false;
+                Button shiftBtn = findViewById(R.id.shiftBtn);
+                shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+            if (winPressed){
+                writeParams += "d";
+                winPressed = false;
+                Button winBtn = findViewById(R.id.winBtn);
+                winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            }
+            return writeParams;
+        }
+
         boolean transmitData(){
             try{
                 if (socket != null) {
@@ -1016,99 +859,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().flush();
                         sendPing = false;
                     }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
-                        String writeParams = "k";
-                        if (ctrlPressed){
-                            writeParams += "a";
-                            if (!keyboardBuf.contains("\\l") && !keyboardBuf.contains("\\r") && !keyboardBuf.contains("\\u") && !keyboardBuf.contains("\\d")) {
-                                ctrlPressed = false;
-                                Button ctrlBtn = findViewById(R.id.ctrlBtn);
-                                ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                            }else if (altPressed || shiftPressed || winPressed){
-                                ctrlPressed = false;
-                                Button ctrlBtn = findViewById(R.id.ctrlBtn);
-                                ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                            }
-                        }
-                        if (altPressed){
-                            writeParams += "b";
-                            altPressed = false;
-                            Button altBtn = findViewById(R.id.altBtn);
-                            altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
-                        if (shiftPressed){
-                            writeParams += "c";
-                            shiftPressed = false;
-                            Button shiftBtn = findViewById(R.id.shiftBtn);
-                            shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
-                        if (winPressed){
-                            writeParams += "d";
-                            winPressed = false;
-                            Button winBtn = findViewById(R.id.winBtn);
-                            winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
                         if (keyboardBuf.contains("\t")) {
-                            socket.getOutputStream().write((writeParams + ":" + "\\t").getBytes());
+                            socket.getOutputStream().write((applyModifiers("k") + ":" + "\\t").getBytes());
                             socket.getOutputStream().flush();
                         }else {
-                            socket.getOutputStream().write((writeParams + ":" + keyboardBuf).getBytes());
+                            socket.getOutputStream().write((applyModifiers("k") + ":" + keyboardBuf).getBytes());
                             socket.getOutputStream().flush();
                         }
                         keyboardBuf = "";
-                    }else if (keyDir > 0){
-                        String writeParams = "k";
-                        if (ctrlPressed){
-                            writeParams += "a";
-                            if (altPressed || shiftPressed || winPressed){
-                                ctrlPressed = false;
-                                Button ctrlBtn = findViewById(R.id.ctrlBtn);
-                                ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                            }
-                        }
-                        if (altPressed){
-                            writeParams += "b";
-                            altPressed = false;
-                            Button altBtn = findViewById(R.id.altBtn);
-                            altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
-                        if (shiftPressed){
-                            writeParams += "c";
-                            shiftPressed = false;
-                            Button shiftBtn = findViewById(R.id.shiftBtn);
-                            shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
-                        if (winPressed){
-                            writeParams += "d";
-                            winPressed = false;
-                            Button winBtn = findViewById(R.id.winBtn);
-                            winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                        }
-                        if (keyDir == 1){
-                            socket.getOutputStream().write((writeParams + ":" + "\\u").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 2){
-                            socket.getOutputStream().write((writeParams + ":" + "\\d").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 3){
-                            socket.getOutputStream().write((writeParams + ":" + "\\l").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 4){
-                            socket.getOutputStream().write((writeParams + ":" + "\\r").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 5){
-                            socket.getOutputStream().write((writeParams + ":" + "\\l\\u").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 6){
-                            socket.getOutputStream().write((writeParams + ":" + "\\r\\u").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 7){
-                            socket.getOutputStream().write((writeParams + ":" + "\\l\\d").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (keyDir == 8){
-                            socket.getOutputStream().write((writeParams + ":" + "\\r\\d").getBytes());
-                            socket.getOutputStream().flush();
-                        }
-                        Thread.sleep(100);
                     }else if (scroll != 0){
                         if (scroll == 1){
                             socket.getOutputStream().write(("sd").getBytes());
