@@ -32,77 +32,14 @@ static TCHAR szTitle[] = _T("");
 
 HMENU rightClickMenu;
 
-void mouseClick() {
-	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-}
+bool ctrlPressed = false;
+bool altPressed = false;
+bool shiftPressed = false;
+bool winPressed = false;
 
-void scrollDown() {
-	POINT P;
-	HWND Handle;
-	GetCursorPos(&P);
-	Handle = WindowFromPoint(P);
+void handleModifiers(INPUT *ip, std::string message, int *index) {
+	int counter = *index;
 
-	LPARAM lParam = MAKELPARAM(P.x, P.y);
-	PostMessage(Handle, WM_MOUSEWHEEL, 0xFF880000, lParam);
-	PostMessage(Handle, WM_MOUSEWHEEL, 0xFF880000, lParam);
-	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
-	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
-}
-
-void scrollUp() {
-	POINT P;
-	HWND Handle;
-	GetCursorPos(&P);
-	Handle = WindowFromPoint(P);
-
-	LPARAM lParam = MAKELPARAM(P.x, P.y);
-	PostMessage(Handle, WM_MOUSEWHEEL, 0x00780000, lParam);
-	PostMessage(Handle, WM_MOUSEWHEEL, 0x00780000, lParam);
-	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
-	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
-}
-
-void scrollLeft() {
-	POINT P;
-	HWND Handle;
-	GetCursorPos(&P);
-	Handle = WindowFromPoint(P);
-
-	LPARAM lParam = MAKELPARAM(P.x, P.y);
-	PostMessage(Handle, WM_MOUSEHWHEEL, 0xFF880000, lParam);
-	PostMessage(Handle, WM_MOUSEHWHEEL, 0xFF880000, lParam);
-	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
-	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
-}
-
-void scrollRight() {
-	POINT P;
-	HWND Handle;
-	GetCursorPos(&P);
-	Handle = WindowFromPoint(P);
-
-	LPARAM lParam = MAKELPARAM(P.x, P.y);
-	PostMessage(Handle, WM_MOUSEHWHEEL, 0x00780000, lParam);
-	PostMessage(Handle, WM_MOUSEHWHEEL, 0x00780000, lParam);
-	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
-	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
-}
-
-void printBufferToActiveWindow(std::string message) {
-	INPUT ip;
-	ip.type = INPUT_KEYBOARD;
-	ip.ki.time = 0;
-	ip.ki.wVk = 0;
-	ip.ki.dwExtraInfo = 0;
-	ip.ki.wScan = 0;
-	ip.ki.dwFlags = 0;
-
-	bool ctrlPressed = false;
-	bool altPressed = false;
-	bool shiftPressed = false;
-	bool winPressed = false;
-
-	int counter = 0;
 	while (message[counter] != ':' && counter < message.length()) {
 		if (message[counter] == 'a') {
 			ctrlPressed = true;
@@ -119,27 +56,168 @@ void printBufferToActiveWindow(std::string message) {
 		counter++;
 	}
 	counter++;
+	*index = counter;
 
 	if (ctrlPressed) {
-		ip.ki.wVk = VK_CONTROL;
-		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
-		SendInput(1, &ip, sizeof(INPUT));
+		(*ip).ki.wVk = VK_CONTROL;
+		(*ip).ki.wScan = MapVirtualKey(VK_CONTROL, 0);
+		SendInput(1, ip, sizeof(INPUT));
 	}
 	if (altPressed) {
-		ip.ki.wVk = VK_MENU;
-		ip.ki.wScan = MapVirtualKey(VK_MENU, 0);
-		SendInput(1, &ip, sizeof(INPUT));
+		(*ip).ki.wVk = VK_MENU;
+		(*ip).ki.wScan = MapVirtualKey(VK_MENU, 0);
+		SendInput(1, ip, sizeof(INPUT));
 	}
 	if (shiftPressed) {
-		ip.ki.wVk = VK_SHIFT;
-		ip.ki.wScan = MapVirtualKey(VK_SHIFT, 0);
-		SendInput(1, &ip, sizeof(INPUT));
+		(*ip).ki.wVk = VK_SHIFT;
+		(*ip).ki.wScan = MapVirtualKey(VK_SHIFT, 0);
+		SendInput(1, ip, sizeof(INPUT));
 	}
 	if (winPressed) {
-		ip.ki.wVk = VK_LWIN;
-		ip.ki.wScan = MapVirtualKey(VK_LWIN, 0);
-		SendInput(1, &ip, sizeof(INPUT));
+		(*ip).ki.wVk = VK_LWIN;
+		(*ip).ki.wScan = MapVirtualKey(VK_LWIN, 0);
+		SendInput(1, ip, sizeof(INPUT));
 	}
+}
+
+void releaseModifiers(INPUT *ip) {
+	if (ctrlPressed) {
+		(*ip).ki.wVk = VK_CONTROL;
+		(*ip).ki.wScan = MapVirtualKey(VK_CONTROL, 0);
+		(*ip).ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, ip, sizeof(INPUT));
+	}
+	if (altPressed) {
+		(*ip).ki.wVk = VK_MENU;
+		(*ip).ki.wScan = MapVirtualKey(VK_MENU, 0);
+		(*ip).ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, ip, sizeof(INPUT));
+	}
+	if (shiftPressed) {
+		(*ip).ki.wVk = VK_SHIFT;
+		(*ip).ki.wScan = MapVirtualKey(VK_SHIFT, 0);
+		(*ip).ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, ip, sizeof(INPUT));
+	}
+	if (winPressed) {
+		(*ip).ki.wVk = VK_LWIN;
+		(*ip).ki.wScan = MapVirtualKey(VK_LWIN, 0);
+		(*ip).ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, ip, sizeof(INPUT));
+	}
+	ctrlPressed = false;
+	altPressed = false;
+	shiftPressed = false;
+	winPressed = false;
+}
+
+void scrollDown(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 2;
+	handleModifiers(&ip, message, &index);
+
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0xFF880000, lParam);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEDOWN, 0);
+
+	releaseModifiers(&ip);
+}
+
+void scrollUp(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 2;
+	handleModifiers(&ip, message, &index);
+
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEWHEEL, 0x00780000, lParam);
+	PostMessage(Handle, WM_VSCROLL, SB_LINEUP, 0);
+
+	releaseModifiers(&ip);
+}
+
+void scrollLeft(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 2;
+	handleModifiers(&ip, message, &index);
+
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0xFF880000, lParam);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEUP, 0);
+
+	releaseModifiers(&ip);
+}
+
+void scrollRight(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 2;
+	handleModifiers(&ip, message, &index);
+
+	POINT P;
+	HWND Handle;
+	GetCursorPos(&P);
+	Handle = WindowFromPoint(P);
+
+	LPARAM lParam = MAKELPARAM(P.x, P.y);
+	PostMessage(Handle, WM_MOUSEHWHEEL, 0x00780000, lParam);
+	PostMessage(Handle, WM_HSCROLL, SB_LINEDOWN, 0);
+
+	releaseModifiers(&ip);
+}
+
+void printBufferToActiveWindow(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+	
+	int counter = 0;
+	handleModifiers(&ip, message, &counter);
 	for (int i = counter; i < message.length(); i++) {
 		ip.ki.dwFlags = 0;
 		ip.ki.wScan = 0;
@@ -202,47 +280,81 @@ void printBufferToActiveWindow(std::string message) {
 		ip.ki.dwFlags = KEYEVENTF_KEYUP;
 		SendInput(1, &ip, sizeof(INPUT));
 	}
-	if (ctrlPressed) {
-		ip.ki.wVk = VK_CONTROL;
-		ip.ki.wScan = MapVirtualKey(VK_CONTROL, 0);
-		ip.ki.dwFlags = KEYEVENTF_KEYUP;
-		SendInput(1, &ip, sizeof(INPUT));
-	}
-	if (altPressed) {
-		ip.ki.wVk = VK_MENU;
-		ip.ki.wScan = MapVirtualKey(VK_MENU, 0);
-		ip.ki.dwFlags = KEYEVENTF_KEYUP;
-		SendInput(1, &ip, sizeof(INPUT));
-	}
-	if (shiftPressed) {
-		ip.ki.wVk = VK_SHIFT;
-		ip.ki.wScan = MapVirtualKey(VK_SHIFT, 0);
-		ip.ki.dwFlags = KEYEVENTF_KEYUP;
-		SendInput(1, &ip, sizeof(INPUT));
-	}
-	if (winPressed) {
-		ip.ki.wVk = VK_LWIN;
-		ip.ki.wScan = MapVirtualKey(VK_LWIN, 0);
-		ip.ki.dwFlags = KEYEVENTF_KEYUP;
-		SendInput(1, &ip, sizeof(INPUT));
-	}
+	releaseModifiers(&ip);
 }
 
-void rightClick() {
-	mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+void rightDragStart(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 1;
+	handleModifiers(&ip, message, &index);
+
+	mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
 }
 
-void doubleClick() {
+void rightDragEnd(std::string message) {
+	mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+	releaseModifiers(&ip);
+}
+
+void doubleClick(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 1;
+	handleModifiers(&ip, message, &index);
+
 	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
+	releaseModifiers(&ip);
 }
 
-void mouseDragStart() {
+void mouseDragStart(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 1;
+	handleModifiers(&ip, message, &index);
+
 	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 }
 
-void mouseDragEnd() {
+void mouseDragEnd(std::string message) {
 	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+	releaseModifiers(&ip);
 }
 
 
@@ -391,33 +503,33 @@ DWORD WINAPI logicThread(__in LPVOID lpParameter)
 						printf("still connected\n");
 					}
 					else if (recvbuf[0] == 's') {
-						if (recvbuf[1] == 'd') {
-							scrollDown();
+						if (recvbuf[1] == 'v') {
+							scrollDown(recvbuf);
 						}
 						else if (recvbuf[1] == 'u') {
-							scrollUp();
+							scrollUp(recvbuf);
 						}
 						else if (recvbuf[1] == 'l') {
-							scrollLeft();
+							scrollLeft(recvbuf);
 						}
 						else if (recvbuf[1] == 'r') {
-							scrollRight();
+							scrollRight(recvbuf);
 						}
 					}
-					else if (recvbuf[0] == 'c') {
-						mouseClick();
-					}
 					else if (recvbuf[0] == 'r') {
-						rightClick();
+						rightDragStart(recvbuf);
+					}
+					else if (recvbuf[0] == 't') {
+						rightDragEnd(recvbuf);
 					}
 					else if (recvbuf[0] == 'x') {
-						doubleClick();
+						doubleClick(recvbuf);
 					}
-					else if (recvbuf[0] == 'd') {
-						mouseDragStart();
+					else if (recvbuf[0] == 'm') {
+						mouseDragStart(recvbuf);
 					}
 					else if (recvbuf[0] == 'e') {
-						mouseDragEnd();
+						mouseDragEnd(recvbuf);
 					}
 					else if (recvbuf[0] == 'k') {
 						int counter = 1;

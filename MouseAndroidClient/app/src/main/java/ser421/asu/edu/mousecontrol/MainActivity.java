@@ -5,11 +5,13 @@
 //TODO: add picture to system tray icon, add icon for android app
 //TODO: make server start on computer startup (option in settings window)
 //TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
-//TODO: add left, right, and middle click button
 //TODO: add bluetooth support
 //TODO: closing keyboard sometimes crashes app
-//TODO: make mod keys work with mouse inputs as well
+//TODO: add zoom shortcut, back and forward shortcut
 //TODO: make arrow buttons for keyboard work when held down again
+//TODO: add middle click button
+//TODO: mouse left, right, middle click button add drag while pressed (with same finger or different finger)
+//TODO: make real command handler
 
 package ser421.asu.edu.mousecontrol;
 
@@ -60,10 +62,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     int previousBufLength = 2;
     final int MOVEMENT_MIN = 10;
     final int SPEED = 20;
-    boolean mouseClick = false;
-    boolean rightClick = false;
+    boolean rightDragStart = false, rightDrag = false, rightDragEnd = false;
     boolean mouseDragStart = false, mouseDrag = false, mouseDragEnd = false;
-    boolean doubleClick = false;
     boolean newIP = false;
     boolean transmitMovement = false;
     boolean multiTouch = false;
@@ -222,6 +222,34 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             arrowButtonPressed(event, SPEED/2, SPEED/2, 8);
             return true;
         });
+        View leftClickButton = findViewById(R.id.leftClickBtn);
+        leftClickButton.setOnTouchListener((v, event) -> {
+            v.performClick();
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                mouseDragStart = true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP){
+                mouseDragEnd = true;
+            }
+            return true;
+        });
+        View rightClickButton = findViewById(R.id.rightClickBtn);
+        rightClickButton.setOnTouchListener((v, event) -> {
+            v.performClick();
+            if (event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    rightDragStart = true;
+                }else if (event.getAction() == MotionEvent.ACTION_UP){
+                    rightDragEnd = true;
+                }
+            }
+            return true;
+        });
+        View middleClickButton = findViewById(R.id.midClickBtn);
+        middleClickButton.setOnTouchListener((v, event) -> {
+            v.performClick();
+            //TODO
+            return true;
+        });
 
         Button ctrlBtn = findViewById(R.id.ctrlBtn);
         Button altBtn = findViewById(R.id.altBtn);
@@ -334,7 +362,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
         setKeyboardToolbarVisiblity(this, false);
 
-        System.out.println("onCreate() called");
         thread = new ClientThread();
         new Thread(thread).start();
     }
@@ -396,7 +423,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public void onResume() {
         super.onResume();
-        System.out.println("onResume() called");
 
         setKeyboardToolbarVisiblity(this, false);
     }
@@ -409,21 +435,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("onDestroy() called");
     }
 
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        if (!multiTouch) {
-            if (!mouseDrag) {
-                mouseClick = true;
-            }else{
-                mouseDragEnd = true;
-                mouseDrag = false;
-            }
-            return true;
-        }
         return false;
     }
 
@@ -445,7 +461,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     mouseDragStart = true;
                 }
             } else if (e.getAction() == MotionEvent.ACTION_UP && !mouseDragStart && !mouseDrag && !mouseDragEnd) {
-                doubleClick = true;
+                mouseDragStart = true;
+                mouseDragEnd = true;
             }
             return true;
         }
@@ -562,7 +579,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     }
                 }else if (event.getPointerCount() > 1 && event.getX(0) - prevX > 40 && event.getX(1) - prevX2 > 40 &&
                         Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
-                    System.out.println("two finger scroll left");
                     scroll = 4;
                     prevX = event.getX(0);
                     prevY = event.getY(0);
@@ -570,21 +586,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     prevY2 = event.getY(1);
                 }else if (event.getPointerCount() > 1 && event.getX(0) - prevX < -40 && event.getX(1) - prevX2 < -40 &&
                         Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
-                    System.out.println("two finger scroll right");
                     scroll = 3;
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
                 }else if (event.getPointerCount() > 1 && event.getY(0) - prevY > 40 && event.getY(1) - prevY2 > 40) {
-                    System.out.println("two finger scroll up");
                     scroll = 2;
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
                 }else if (event.getPointerCount() > 1 && event.getY(0) - prevY < -40 && event.getY(1) - prevY2 < -40) {
-                    System.out.println("two finger scroll down");
                     scroll = 1;
                     prevX = event.getX(0);
                     prevY = event.getY(0);
@@ -617,6 +630,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
+        if (!multiTouch) {
+            if (!mouseDrag) {
+                mouseDragStart = true;
+                mouseDragEnd = true;
+            }else{
+                mouseDragEnd = true;
+                mouseDrag = false;
+            }
+            return true;
+        }
         return false;
     }
 
@@ -628,7 +651,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public void onLongPress(MotionEvent e) {
         if (!multiTouch) {
-            rightClick = true;
+            rightDragStart = true;
+            rightDragEnd = true;
         }
     }
 
@@ -776,9 +800,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            rightClick = false;
-            mouseClick = false;
-            doubleClick = false;
+            rightDrag = false;
+            rightDragStart = false;
+            rightDragEnd = false;
             mouseDrag = false;
             mouseDragStart = false;
             mouseDragEnd = false;
@@ -810,34 +834,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             String writeParams = initString;
             if (ctrlPressed){
                 writeParams += "a";
-                if (!keyboardBuf.contains("\\l") && !keyboardBuf.contains("\\r") && !keyboardBuf.contains("\\u") && !keyboardBuf.contains("\\d")) {
-                    ctrlPressed = false;
-                    Button ctrlBtn = findViewById(R.id.ctrlBtn);
-                    ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                }else if (altPressed || shiftPressed || winPressed){
-                    ctrlPressed = false;
-                    Button ctrlBtn = findViewById(R.id.ctrlBtn);
-                    ctrlBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                }
             }
             if (altPressed){
                 writeParams += "b";
-                altPressed = false;
-                Button altBtn = findViewById(R.id.altBtn);
-                altBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
             }
             if (shiftPressed){
                 writeParams += "c";
-                shiftPressed = false;
-                Button shiftBtn = findViewById(R.id.shiftBtn);
-                shiftBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
             }
             if (winPressed){
                 writeParams += "d";
-                winPressed = false;
-                Button winBtn = findViewById(R.id.winBtn);
-                winBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
             }
+
+            writeParams += ":";
             return writeParams;
         }
 
@@ -860,57 +868,51 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         sendPing = false;
                     }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
                         if (keyboardBuf.contains("\t")) {
-                            socket.getOutputStream().write((applyModifiers("k") + ":" + "\\t").getBytes());
+                            socket.getOutputStream().write((applyModifiers("k") + "\\t").getBytes());
                             socket.getOutputStream().flush();
                         }else {
-                            socket.getOutputStream().write((applyModifiers("k") + ":" + keyboardBuf).getBytes());
+                            socket.getOutputStream().write((applyModifiers("k") + keyboardBuf).getBytes());
                             socket.getOutputStream().flush();
                         }
                         keyboardBuf = "";
                     }else if (scroll != 0){
                         if (scroll == 1){
-                            socket.getOutputStream().write(("sd").getBytes());
+                            socket.getOutputStream().write(applyModifiers("sv").getBytes());
                             socket.getOutputStream().flush();
                         }else if (scroll == 2){
-                            socket.getOutputStream().write(("su").getBytes());
+                            socket.getOutputStream().write(applyModifiers("su").getBytes());
                             socket.getOutputStream().flush();
                         }else if (scroll == 3){
-                            socket.getOutputStream().write(("sr").getBytes());
+                            socket.getOutputStream().write(applyModifiers("sr").getBytes());
                             socket.getOutputStream().flush();
                         }else if (scroll == 4){
-                            socket.getOutputStream().write(("sl").getBytes());
+                            socket.getOutputStream().write(applyModifiers("sl").getBytes());
                             socket.getOutputStream().flush();
                         }
                         scroll = 0;
                     }else if (mouseDragStart){
                         mouseDragStart = false;
                         mouseDrag = true;
-                        socket.getOutputStream().write(("d").getBytes());
+                        socket.getOutputStream().write(applyModifiers("m").getBytes());
                         socket.getOutputStream().flush();
-                        System.out.println("drag start");
                     }else if (mouseDragEnd){
                         mouseDragEnd = false;
                         mouseDrag = false;
-                        mouseClick = false;
-                        rightClick = false;
-                        socket.getOutputStream().write(("e").getBytes());
+                        rightDragEnd = false;
+                        rightDrag = false;
+                        rightDragStart = false;
+                        socket.getOutputStream().write(applyModifiers("e").getBytes());
                         socket.getOutputStream().flush();
-                        System.out.println("drag end");
-                    }else if (doubleClick && !mouseDrag && !mouseClick){
-                        doubleClick = false;
-                        socket.getOutputStream().write(("x").getBytes());
+                    }else if (rightDragStart && !mouseDrag){
+                        rightDragStart = false;
+                        rightDrag = true;
+                        socket.getOutputStream().write(applyModifiers("r").getBytes());
                         socket.getOutputStream().flush();
-                        System.out.println("double click");
-                    }else if (mouseClick && !mouseDrag && !rightClick){
-                        mouseClick = false;
-                        socket.getOutputStream().write(("c").getBytes());
+                    }else if (rightDragEnd && !mouseDrag){
+                        rightDragEnd = false;
+                        rightDrag = false;
+                        socket.getOutputStream().write(applyModifiers("t").getBytes());
                         socket.getOutputStream().flush();
-                        System.out.println("mouse click");
-                    }else if (rightClick && !mouseDrag){
-                        rightClick = false;
-                        socket.getOutputStream().write(("r").getBytes());
-                        socket.getOutputStream().flush();
-                        System.out.println("right click");
                     }
                 }
             }catch(IOException | InterruptedException e){

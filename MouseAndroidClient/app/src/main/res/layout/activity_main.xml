@@ -73,7 +73,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:columnCount="3"
-                android:rowCount="3">
+                android:rowCount="4">
 
                 <Button
                     android:id="@+id/leftUpBtn"
@@ -133,6 +133,24 @@
 
                 <Button
                     android:id="@+id/rightDownBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/leftClickBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/midClickBtn"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="fill"/>
+
+                <Button
+                    android:id="@+id/rightClickBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_gravity="fill"/>
