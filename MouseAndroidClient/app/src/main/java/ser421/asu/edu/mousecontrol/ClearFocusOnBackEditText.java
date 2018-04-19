@@ -4,15 +4,11 @@ import android.content.Context;
 import android.support.v7.widget.AppCompatEditText;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
-import android.widget.EditText;
 
 public class ClearFocusOnBackEditText extends AppCompatEditText {
 
-    Context context;
-
     public ClearFocusOnBackEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
-        this.context = context;
     }
 
     @Override

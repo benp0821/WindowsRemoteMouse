@@ -6,12 +6,10 @@
 //TODO: make server start on computer startup (option in settings window)
 //TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
 //TODO: add bluetooth support
-//TODO: closing keyboard sometimes crashes app
 //TODO: add zoom shortcut, back and forward shortcut
 //TODO: make arrow buttons for keyboard work when held down again
-//TODO: add middle click button
-//TODO: mouse left, right, middle click button add drag while pressed (with same finger or different finger)
-//TODO: make real command handler
+//TODO: mouse left, right, middle click button add drag while pressed (with same finger or different finger) (partially working for right with same finger, sometimes drag stops on finger up, other times it doesn't)
+//TODO: use shared preferences to save preferences instead of saving to a file
 
 package ser421.asu.edu.mousecontrol;
 
@@ -54,55 +52,70 @@ import java.util.TimerTask;
 
 public class MainActivity extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 
-    float prevX, prevY;
-    float prevX2, prevY2;
-    float difX = 0, difY = 0;
-    int xSpeed = 0, ySpeed = 0;
-    int scroll = 0;
-    int previousBufLength = 2;
-    final int MOVEMENT_MIN = 10;
-    final int SPEED = 20;
-    boolean rightDragStart = false, rightDrag = false, rightDragEnd = false;
-    boolean mouseDragStart = false, mouseDrag = false, mouseDragEnd = false;
-    boolean newIP = false;
-    boolean transmitMovement = false;
-    boolean multiTouch = false;
-    boolean arrowsControlMouse = true;
-    boolean mouseKeyPressed = false;
-    static boolean ctrlPressed = false, altPressed = false, shiftPressed = false, winPressed = false, keyboardPinned = false;
+    private float prevX;
+    private float prevY;
+    private float prevX2;
+    private float prevY2;
+    private float difX = 0;
+    private float difY = 0;
+    private int xSpeed = 0;
+    private int ySpeed = 0;
+    private int scroll = 0;
+    private int previousBufLength = 2;
+    private final int SPEED = 20;
+    private boolean rightDragStart = false;
+    private boolean rightDrag = false;
+    private boolean rightDragEnd = false;
+    private boolean mouseDragStart = false;
+    private boolean mouseDrag = false;
+    private boolean mouseDragEnd = false;
+    private boolean middleDragStart = false;
+    private boolean middleDragEnd = false;
+    private boolean newIP = false;
+    private boolean transmitMovement = false;
+    private boolean multiTouch = false;
+    private boolean arrowsControlMouse = true;
+    private boolean mouseKeyPressed = false;
+    private static boolean ctrlPressed = false;
+    private static boolean altPressed = false;
+    private static boolean shiftPressed = false;
+    private static boolean winPressed = false;
+    private static boolean keyboardPinned = false;
     static boolean ignoreLeftArrow = false;
-    float doubleClickInitX = 0, doubleClickInitY = 0;
+    private float doubleClickInitX = 0;
+    private float doubleClickInitY = 0;
     static String keyboardBuf = "";
 
-    volatile boolean scan = true, initialScan = true;
-    int initScanCounter = 1;
+    private volatile boolean scan = true;
+    private volatile boolean initialScan = true;
+    private int initScanCounter = 1;
     private Socket socket;
-    ClientThread thread;
+    private ClientThread thread;
     private static final int SERVERPORT = 27015;
     private static String serverip = "1.1.1.1";
 
-    TextView connectionStatusText;
-    Button arrowToggleButton;
-    SelectionChangedEditText hiddenKeyBuffer;
-    TextWatcher hiddenTextWatcher;
-    GestureDetector detector;
+    private TextView connectionStatusText;
+    private Button arrowToggleButton;
+    private SelectionChangedEditText hiddenKeyBuffer;
+    private TextWatcher hiddenTextWatcher;
+    private GestureDetector detector;
 
-    boolean sendPing = false;
-    Timer pingServer = new Timer();
+    private boolean sendPing = false;
+    private final Timer pingServer = new Timer();
     class PingServerTask extends TimerTask {
         public void run(){
             sendPing = true;
         }
     }
 
-    boolean amTyping = false;
-    Timer t = new Timer();
+    private boolean amTyping = false;
+    private final Timer t = new Timer();
     class StopTypingTask extends TimerTask {
         public void run() {
             amTyping = false;
         }
     }
-    StopTypingTask stt = new StopTypingTask();
+    private StopTypingTask stt = new StopTypingTask();
 
 
 
@@ -222,24 +235,36 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             arrowButtonPressed(event, SPEED/2, SPEED/2, 8);
             return true;
         });
+
+        final double[] startX = new double[3];
+        final double[] startY = new double[3];
+
         View leftClickButton = findViewById(R.id.leftClickBtn);
         leftClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 mouseDragStart = true;
-            }else if (event.getAction() == MotionEvent.ACTION_UP){
-                mouseDragEnd = true;
+                startX[0] = event.getRawX();
+                startY[0] = event.getRawY();
+            }else if (event.getAction() == MotionEvent.ACTION_MOVE){
+                if (Math.abs(event.getRawX() - startX[0]) > 50 || Math.abs(event.getRawY() - startY[0]) > 50) {
+                    moveMouse(event);
+                }
             }
             return true;
         });
         View rightClickButton = findViewById(R.id.rightClickBtn);
         rightClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
-            if (event.getAction() == MotionEvent.ACTION_UP){
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    rightDragStart = true;
-                }else if (event.getAction() == MotionEvent.ACTION_UP){
-                    rightDragEnd = true;
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                rightDragStart = true;
+                startX[1] = event.getRawX();
+                startY[1] = event.getRawY();
+            }else if (event.getAction() == MotionEvent.ACTION_UP){
+                rightDragEnd = true;
+            }else if (event.getAction() == MotionEvent.ACTION_MOVE){
+                if (Math.abs(event.getRawX() - startX[1]) > 50 || Math.abs(event.getRawY() - startY[1]) > 50) {
+                    moveMouse(event);
                 }
             }
             return true;
@@ -247,7 +272,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         View middleClickButton = findViewById(R.id.midClickBtn);
         middleClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
-            //TODO
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                middleDragStart = true;
+            }else if (event.getAction() == MotionEvent.ACTION_UP){
+                middleDragEnd = true;
+            }
             return true;
         });
 
@@ -366,7 +395,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         new Thread(thread).start();
     }
 
-    public boolean toggleKeyPressed(View v, boolean isPressed){
+    private boolean toggleKeyPressed(View v, boolean isPressed){
         if (!isPressed){
             v.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
         }else{
@@ -375,7 +404,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         return !isPressed;
     }
 
-    public void arrowButtonPressed(MotionEvent event, int xSpeed, int ySpeed, int keyDir){
+    private void arrowButtonPressed(MotionEvent event, int xSpeed, int ySpeed, int keyDir){
         hideIPKeyboard();
         if (arrowsControlMouse) {
             arrowMouseButtonEvent(event, xSpeed, ySpeed);
@@ -384,7 +413,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    public void arrowMouseButtonEvent(MotionEvent event, int xSpeed, int ySpeed){
+    private void arrowMouseButtonEvent(MotionEvent event, int xSpeed, int ySpeed){
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             this.xSpeed = xSpeed;
             this.ySpeed = ySpeed;
@@ -398,7 +427,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    public void arrowKeyboardButtonEvent(MotionEvent event, int keyDir){
+    private void arrowKeyboardButtonEvent(MotionEvent event, int keyDir){
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             if (keyDir == 1){
                 keyboardBuf = "\\u";
@@ -512,7 +541,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    public void hideIPKeyboard(){
+    private void hideIPKeyboard(){
         if (!keyboardPinned) {
             EditText ipTextBox = findViewById(R.id.ipAddrTxt);
             ipTextBox.clearFocus();
@@ -525,7 +554,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    public void showKeyBufferKeyboard(){
+    private void showKeyBufferKeyboard(){
         EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
         hiddenKeyBuffer.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -535,6 +564,33 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length()-2);
 
         setKeyboardToolbarVisiblity(this, true);
+    }
+
+    private void moveMouse(MotionEvent event){
+        difX = event.getX() - prevX;
+        difY = event.getY() - prevY;
+        int MOVEMENT_MIN = 10;
+        if (Math.abs(difX) > MOVEMENT_MIN || Math.abs(difY) > MOVEMENT_MIN) {
+            if (difX > MOVEMENT_MIN){
+                prevX = event.getX();
+                xSpeed = SPEED;
+            }else if (difX < -MOVEMENT_MIN){
+                xSpeed = -SPEED;
+                prevX = event.getX();
+            }else if (difX < 30 && difX > -30){
+                xSpeed = 0;
+            }
+            if (difY > MOVEMENT_MIN){
+                prevY = event.getY();
+                ySpeed = SPEED;
+            }else if (difY < -MOVEMENT_MIN){
+                ySpeed = -SPEED;
+                prevY = event.getY();
+            }else if (difY < 30 && difY > -30){
+                ySpeed = 0;
+            }
+            transmitMovement = true;
+        }
     }
 
     @Override
@@ -554,29 +610,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (!multiTouch) {
-                    difX = event.getX() - prevX;
-                    difY = event.getY() - prevY;
-                    if (Math.abs(difX) > MOVEMENT_MIN || Math.abs(difY) > MOVEMENT_MIN) {
-                        if (difX > MOVEMENT_MIN){
-                            prevX = event.getX();
-                            xSpeed = SPEED;
-                        }else if (difX < -MOVEMENT_MIN){
-                            xSpeed = -SPEED;
-                            prevX = event.getX();
-                        }else if (difX < 30 && difX > -30){
-                            xSpeed = 0;
-                        }
-                        if (difY > MOVEMENT_MIN){
-                            prevY = event.getY();
-                            ySpeed = SPEED;
-                        }else if (difY < -MOVEMENT_MIN){
-                            ySpeed = -SPEED;
-                            prevY = event.getY();
-                        }else if (difY < 30 && difY > -30){
-                            ySpeed = 0;
-                        }
-                        transmitMovement = true;
-                    }
+                    moveMouse(event);
                 }else if (event.getPointerCount() > 1 && event.getX(0) - prevX > 40 && event.getX(1) - prevX2 > 40 &&
                         Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
                     scroll = 4;
@@ -661,7 +695,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         return false;
     }
 
-    public void writeIpToFile(){
+    private void writeIpToFile(){
         FileOutputStream outputStream;
         try {
             outputStream = openFileOutput("savedIP.txt", Context.MODE_PRIVATE);
@@ -800,12 +834,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            rightDrag = false;
-            rightDragStart = false;
-            rightDragEnd = false;
-            mouseDrag = false;
-            mouseDragStart = false;
-            mouseDragEnd = false;
+            endMouseDrag();
             scroll = 0;
 
             boolean keepLooping = true;
@@ -847,6 +876,17 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
             writeParams += ":";
             return writeParams;
+        }
+
+        void endMouseDrag(){
+            mouseDragEnd = false;
+            mouseDrag = false;
+            mouseDragStart = false;
+            rightDragEnd = false;
+            rightDrag = false;
+            rightDragStart = false;
+            middleDragEnd = false;
+            middleDragStart = false;
         }
 
         boolean transmitData(){
@@ -896,11 +936,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().write(applyModifiers("m").getBytes());
                         socket.getOutputStream().flush();
                     }else if (mouseDragEnd){
-                        mouseDragEnd = false;
-                        mouseDrag = false;
-                        rightDragEnd = false;
-                        rightDrag = false;
-                        rightDragStart = false;
+                        endMouseDrag();
                         socket.getOutputStream().write(applyModifiers("e").getBytes());
                         socket.getOutputStream().flush();
                     }else if (rightDragStart && !mouseDrag){
@@ -909,9 +945,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         socket.getOutputStream().write(applyModifiers("r").getBytes());
                         socket.getOutputStream().flush();
                     }else if (rightDragEnd && !mouseDrag){
-                        rightDragEnd = false;
-                        rightDrag = false;
+                        endMouseDrag();
                         socket.getOutputStream().write(applyModifiers("t").getBytes());
+                        socket.getOutputStream().flush();
+                    }else if (middleDragStart && !mouseDrag && !rightDrag){
+                        middleDragStart = false;
+                        socket.getOutputStream().write(applyModifiers("n").getBytes());
+                        socket.getOutputStream().flush();
+                    }else if (middleDragEnd && !mouseDrag && !rightDrag){
+                        endMouseDrag();
+                        socket.getOutputStream().write(applyModifiers("o").getBytes());
                         socket.getOutputStream().flush();
                     }
                 }

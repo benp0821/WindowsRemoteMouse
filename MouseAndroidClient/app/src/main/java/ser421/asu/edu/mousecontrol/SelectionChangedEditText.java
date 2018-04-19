@@ -1,17 +1,14 @@
 package ser421.asu.edu.mousecontrol;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.AppCompatEditText;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
-import android.widget.Button;
 
 public class SelectionChangedEditText extends AppCompatEditText {
 
-    Context context;
+    private final Context context;
 
     public SelectionChangedEditText(Context context, AttributeSet attrs) {
         super(context, attrs);

@@ -2,6 +2,5 @@
   Server.cpp
 c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(43): warning C4018: '<': signed/unsigned mismatch
 c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(221): warning C4018: '<': signed/unsigned mismatch
-c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(411): warning C4101: 'iSendResult': unreferenced local variable
-c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(673): warning C4302: 'type cast': truncation from 'const char *' to 'WORD'
+c:\users\benja\desktop\mousecontroller\mouseserver\movemousetest\server.cpp(421): warning C4101: 'iSendResult': unreferenced local variable
   MoveMouseTest.vcxproj -> C:\Users\benja\Desktop\MouseController\MouseServer\Debug\MouseControlServer.exe

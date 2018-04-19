@@ -2,7 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by MouseControlServer.rc
 //
-#define IDB_PNG1                        101
+#define ICO1							101
 
 // Next default values for new objects
 // 

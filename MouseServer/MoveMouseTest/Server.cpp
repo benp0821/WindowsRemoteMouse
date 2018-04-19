@@ -311,24 +311,6 @@ void rightDragEnd(std::string message) {
 	releaseModifiers(&ip);
 }
 
-void doubleClick(std::string message) {
-	INPUT ip;
-	ip.type = INPUT_KEYBOARD;
-	ip.ki.time = 0;
-	ip.ki.wVk = 0;
-	ip.ki.dwExtraInfo = 0;
-	ip.ki.wScan = 0;
-	ip.ki.dwFlags = 0;
-
-	int index = 1;
-	handleModifiers(&ip, message, &index);
-
-	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-	mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-
-	releaseModifiers(&ip);
-}
-
 void mouseDragStart(std::string message) {
 	INPUT ip;
 	ip.type = INPUT_KEYBOARD;
@@ -346,6 +328,34 @@ void mouseDragStart(std::string message) {
 
 void mouseDragEnd(std::string message) {
 	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+	releaseModifiers(&ip);
+}
+
+void middleDragStart(std::string message) {
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.time = 0;
+	ip.ki.wVk = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wScan = 0;
+	ip.ki.dwFlags = 0;
+
+	int index = 1;
+	handleModifiers(&ip, message, &index);
+
+	mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);
+}
+
+void middleDragEnd(std::string message) {
+	mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 0);
 
 	INPUT ip;
 	ip.type = INPUT_KEYBOARD;
@@ -522,14 +532,17 @@ DWORD WINAPI logicThread(__in LPVOID lpParameter)
 					else if (recvbuf[0] == 't') {
 						rightDragEnd(recvbuf);
 					}
-					else if (recvbuf[0] == 'x') {
-						doubleClick(recvbuf);
-					}
 					else if (recvbuf[0] == 'm') {
 						mouseDragStart(recvbuf);
 					}
 					else if (recvbuf[0] == 'e') {
 						mouseDragEnd(recvbuf);
+					}
+					else if (recvbuf[0] == 'n') {
+						middleDragStart(recvbuf);
+					}
+					else if (recvbuf[0] == 'o') {
+						middleDragEnd(recvbuf);
 					}
 					else if (recvbuf[0] == 'k') {
 						int counter = 1;
@@ -670,7 +683,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	nid.uID = 100;
 	nid.uVersion = NOTIFYICON_VERSION;
 	nid.uCallbackMessage = WM_MYMESSAGE;
-	nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE("resources\\mouse_icon.png"), IMAGE_ICON, 16, 16, 0);
+	nid.hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(ICO1), IMAGE_ICON, 16, 16, 0);
 	wcscpy_s(nid.szTip, L"Android Mouse Server");
 	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 
