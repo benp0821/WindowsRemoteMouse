@@ -2,14 +2,16 @@
 //TODO: voice control on keyboard causes problems (might be caused by backspace problem)
 //TODO: add support for emojis and non-ascii characters
 //TODO: add EditText to specify port, add option to server window to specify port
-//TODO: add picture to system tray icon, add icon for android app
+//TODO: windows/android icon good
 //TODO: make server start on computer startup (option in settings window)
+//TODO: add setting window to Android app
 //TODO: add keyboard buttons for tab, esc, f1-f12, delete, volume up/down, pgup, pgdn, home, end, insert, prtscr keys toggle buttons
 //TODO: add bluetooth support
 //TODO: add zoom shortcut, back and forward shortcut
 //TODO: make arrow buttons for keyboard work when held down again
 //TODO: mouse left, right, middle click button add drag while pressed (with same finger or different finger) (partially working for right with same finger, sometimes drag stops on finger up, other times it doesn't)
 //TODO: use shared preferences to save preferences instead of saving to a file
+//TODO: redo command handler
 
 package ser421.asu.edu.mousecontrol;
 
@@ -21,6 +23,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -46,7 +49,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -58,24 +60,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     private float prevY2;
     private float difX = 0;
     private float difY = 0;
-    private int xSpeed = 0;
-    private int ySpeed = 0;
-    private int scroll = 0;
+    private static int xSpeed = 0;
+    private static int ySpeed = 0;
     private int previousBufLength = 2;
     private final int SPEED = 20;
-    private boolean rightDragStart = false;
-    private boolean rightDrag = false;
-    private boolean rightDragEnd = false;
-    private boolean mouseDragStart = false;
-    private boolean mouseDrag = false;
-    private boolean mouseDragEnd = false;
-    private boolean middleDragStart = false;
-    private boolean middleDragEnd = false;
-    private boolean newIP = false;
-    private boolean transmitMovement = false;
+    private static boolean newIP = false;
     private boolean multiTouch = false;
     private boolean arrowsControlMouse = true;
-    private boolean mouseKeyPressed = false;
+    private static boolean mouseKeyPressed = false;
     private static boolean ctrlPressed = false;
     private static boolean altPressed = false;
     private static boolean shiftPressed = false;
@@ -84,12 +76,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     static boolean ignoreLeftArrow = false;
     private float doubleClickInitX = 0;
     private float doubleClickInitY = 0;
-    static String keyboardBuf = "";
 
     private volatile boolean scan = true;
     private volatile boolean initialScan = true;
     private int initScanCounter = 1;
-    private Socket socket;
+    private static Socket socket;
     private ClientThread thread;
     private static final int SERVERPORT = 27015;
     private static String serverip = "1.1.1.1";
@@ -100,24 +91,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     private TextWatcher hiddenTextWatcher;
     private GestureDetector detector;
 
-    private boolean sendPing = false;
     private final Timer pingServer = new Timer();
     class PingServerTask extends TimerTask {
         public void run(){
-            sendPing = true;
+            new CommandSender().execute("ping");
         }
     }
-
-    private boolean amTyping = false;
-    private final Timer t = new Timer();
-    class StopTypingTask extends TimerTask {
-        public void run() {
-            amTyping = false;
-        }
-    }
-    private StopTypingTask stt = new StopTypingTask();
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -243,9 +222,10 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         leftClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                mouseDragStart = true;
+                new CommandSender().execute("leftClick", "down");
                 startX[0] = event.getRawX();
                 startY[0] = event.getRawY();
+                new CommandSender().execute("move");
             }else if (event.getAction() == MotionEvent.ACTION_MOVE){
                 if (Math.abs(event.getRawX() - startX[0]) > 50 || Math.abs(event.getRawY() - startY[0]) > 50) {
                     moveMouse(event);
@@ -257,11 +237,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         rightClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                rightDragStart = true;
+                new CommandSender().execute("rightClick", "down");
                 startX[1] = event.getRawX();
                 startY[1] = event.getRawY();
+                new CommandSender().execute("move");
             }else if (event.getAction() == MotionEvent.ACTION_UP){
-                rightDragEnd = true;
+                new CommandSender().execute("rightClick", "up");
+                new CommandSender().execute("move");
             }else if (event.getAction() == MotionEvent.ACTION_MOVE){
                 if (Math.abs(event.getRawX() - startX[1]) > 50 || Math.abs(event.getRawY() - startY[1]) > 50) {
                     moveMouse(event);
@@ -273,9 +255,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         middleClickButton.setOnTouchListener((v, event) -> {
             v.performClick();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                middleDragStart = true;
+                new CommandSender().execute("middleClick", "down");
+                new CommandSender().execute("move");
             }else if (event.getAction() == MotionEvent.ACTION_UP){
-                middleDragEnd = true;
+                new CommandSender().execute("middleClick", "up");
+                new CommandSender().execute("move");
             }
             return true;
         });
@@ -297,7 +281,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         winBtn.setOnClickListener(v -> {
             winPressed = toggleKeyPressed(v, winPressed);
             if (!winPressed){
-                keyboardBuf = "\\w";
+                new CommandSender().execute("keyboard", "\\w");
+                new CommandSender().execute("move");
             }
         });
         pinBtn.setOnClickListener(v -> keyboardPinned = toggleKeyPressed(v, keyboardPinned));
@@ -312,23 +297,20 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (previousBufLength + 2 > hiddenKeyBuffer.getText().toString().length()){
-                    keyboardBuf += "\\b";
+                    new CommandSender().execute("keyboard", "\\b");
                     if (hiddenKeyBuffer.getText().toString().length() == 3){
                         hiddenKeyBuffer.append("/");
                         ignoreLeftArrow = true;
                     }
                 }else {
-                    keyboardBuf += hiddenKeyBuffer.getText().toString().substring(previousBufLength, hiddenKeyBuffer.getText().toString().length()-2);
+                    new CommandSender().execute("keyboard", hiddenKeyBuffer.getText().toString().substring(previousBufLength, hiddenKeyBuffer.getText().toString().length()-2));
                 }
                 previousBufLength = hiddenKeyBuffer.getText().toString().length()-2;
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                amTyping = true;
-                stt.cancel();
-                stt = new StopTypingTask();
-                t.schedule(stt, 100);
+            public void afterTextChanged(Editable editable) {
+
             }
         };
 
@@ -339,7 +321,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
         hiddenKeyBuffer.setOnEditorActionListener((textView, keyCode, event) -> {
             if (keyCode == EditorInfo.IME_ACTION_NEXT) {
-                keyboardBuf = "\\n";
+                new CommandSender().execute("keyboard", "\\n");
             }
             return true;
         });
@@ -415,14 +397,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     private void arrowMouseButtonEvent(MotionEvent event, int xSpeed, int ySpeed){
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            this.xSpeed = xSpeed;
-            this.ySpeed = ySpeed;
-            transmitMovement = true;
+            MainActivity.xSpeed = xSpeed;
+            MainActivity.ySpeed = ySpeed;
+            new CommandSender().execute("move");
             mouseKeyPressed = true;
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            this.xSpeed = 0;
-            this.ySpeed = 0;
-            transmitMovement = false;
+            MainActivity.xSpeed = 0;
+            MainActivity.ySpeed = 0;
+            new CommandSender().execute("move");
             mouseKeyPressed = false;
         }
     }
@@ -430,21 +412,21 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     private void arrowKeyboardButtonEvent(MotionEvent event, int keyDir){
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             if (keyDir == 1){
-                keyboardBuf = "\\u";
+                new CommandSender().execute("keyboard", "\\u");
             }else if (keyDir == 2){
-                keyboardBuf = "\\d";
+                new CommandSender().execute("keyboard", "\\d");
             }else if (keyDir == 3){
-                keyboardBuf = "\\l";
+                new CommandSender().execute("keyboard", "\\l");
             }else if (keyDir == 4){
-                keyboardBuf = "\\r";
+                new CommandSender().execute("keyboard", "\\r");
             }else if (keyDir == 5){
-                keyboardBuf = "\\l\\u";
+                new CommandSender().execute("keyboard", "\\l\\u");
             }else if (keyDir == 6){
-                keyboardBuf = "\\r\\u";
+                new CommandSender().execute("keyboard", "\\r\\u");
             }else if (keyDir == 7){
-                keyboardBuf = "\\l\\d";
+                new CommandSender().execute("keyboard", "\\l\\d");
             }else if (keyDir == 8){
-                keyboardBuf = "\\r\\d";
+                new CommandSender().execute("keyboard", "\\r\\d");
             }
         }
     }
@@ -485,13 +467,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
         if (!multiTouch) {
-            if (e.getAction() == MotionEvent.ACTION_MOVE && !mouseDrag && !mouseDragEnd && !mouseDragStart) {
+            if (e.getAction() == MotionEvent.ACTION_MOVE) {
                 if (Math.abs(e.getX() - doubleClickInitX) > 15 || Math.abs(e.getY() - doubleClickInitY) > 15) {
-                    mouseDragStart = true;
+                    new CommandSender().execute("leftClick", "down");
+                    new CommandSender().execute("move");
                 }
-            } else if (e.getAction() == MotionEvent.ACTION_UP && !mouseDragStart && !mouseDrag && !mouseDragEnd) {
-                mouseDragStart = true;
-                mouseDragEnd = true;
+            } else if (e.getAction() == MotionEvent.ACTION_UP) {
+                new CommandSender().execute("leftClick", "full");
+                new CommandSender().execute("move");
             }
             return true;
         }
@@ -589,7 +572,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             }else if (difY < 30 && difY > -30){
                 ySpeed = 0;
             }
-            transmitMovement = true;
+            new CommandSender().execute("move");
         }
     }
 
@@ -606,37 +589,40 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 difY = 0;
                 xSpeed = 0;
                 ySpeed = 0;
-                transmitMovement = false;
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (!multiTouch) {
                     moveMouse(event);
                 }else if (event.getPointerCount() > 1 && event.getX(0) - prevX > 40 && event.getX(1) - prevX2 > 40 &&
                         Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
-                    scroll = 4;
+                    new CommandSender().execute("scroll", "4");
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
+                    new CommandSender().execute("move");
                 }else if (event.getPointerCount() > 1 && event.getX(0) - prevX < -40 && event.getX(1) - prevX2 < -40 &&
                         Math.abs(event.getY(0) - prevY) <= 40 && Math.abs(event.getY(1) - prevY2) <= 40){
-                    scroll = 3;
+                    new CommandSender().execute("scroll", "3");
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
+                    new CommandSender().execute("move");
                 }else if (event.getPointerCount() > 1 && event.getY(0) - prevY > 40 && event.getY(1) - prevY2 > 40) {
-                    scroll = 2;
+                    new CommandSender().execute("scroll", "2");
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
+                    new CommandSender().execute("move");
                 }else if (event.getPointerCount() > 1 && event.getY(0) - prevY < -40 && event.getY(1) - prevY2 < -40) {
-                    scroll = 1;
+                    new CommandSender().execute("scroll", "1");
                     prevX = event.getX(0);
                     prevY = event.getY(0);
                     prevX2 = event.getX(1);
                     prevY2 = event.getY(1);
+                    new CommandSender().execute("move");
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -645,6 +631,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 prevY = event.getY(0);
                 prevX2 = event.getX(1);
                 prevY2 = event.getY(1);
+                new CommandSender().execute("move");
                 break;
             case MotionEvent.ACTION_DOWN:
                 prevX = event.getX();
@@ -652,6 +639,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 if (multiTouch){
                     multiTouch = false;
                 }
+                new CommandSender().execute("move");
                 break;
         }
         return true;
@@ -665,13 +653,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         if (!multiTouch) {
-            if (!mouseDrag) {
-                mouseDragStart = true;
-                mouseDragEnd = true;
-            }else{
-                mouseDragEnd = true;
-                mouseDrag = false;
-            }
+            new CommandSender().execute("leftClick", "full");
+            new CommandSender().execute("move");
             return true;
         }
         return false;
@@ -685,8 +668,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public void onLongPress(MotionEvent e) {
         if (!multiTouch) {
-            rightDragStart = true;
-            rightDragEnd = true;
+            new CommandSender().execute("rightClick", "full");
+            new CommandSender().execute("move");
         }
     }
 
@@ -703,6 +686,149 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    static class CommandSender extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... command) {
+            try{
+                if (socket != null) {
+                    if (command[0].equals("move")) {
+                        socket.getOutputStream().write((Math.round(xSpeed) + " " + Math.round(ySpeed) + ";").getBytes());
+                        socket.getOutputStream().flush();
+                        if (!mouseKeyPressed){
+                            xSpeed = 0;
+                            ySpeed = 0;
+                        }
+                        Thread.sleep(30);
+                    }
+
+                    if (command[0].equals("ping")) {
+                        socket.getOutputStream().write(("g").getBytes());
+                        socket.getOutputStream().flush();
+                    }
+
+                    if (command[0].equals("keyboard") && command[1] != null){
+                        if (command[1].contains("\t")) {
+                            socket.getOutputStream().write((applyModifiers("k") + "\\t").getBytes());
+                            socket.getOutputStream().flush();
+                        }else {
+                            socket.getOutputStream().write((applyModifiers("k") + command[1]).getBytes());
+                            socket.getOutputStream().flush();
+                        }
+                    }
+
+                    if (command[0].equals("scroll") && command[1] != null){
+                        switch (command[1]) {
+                            case "1":
+                                socket.getOutputStream().write(applyModifiers("sv").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "2":
+                                socket.getOutputStream().write(applyModifiers("su").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "3":
+                                socket.getOutputStream().write(applyModifiers("sr").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "4":
+                                socket.getOutputStream().write(applyModifiers("sl").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                        }
+                    }
+
+                    if (command[0].equals("leftClick") && command[1] != null){
+                        switch (command[1]) {
+                            case "down":
+                                socket.getOutputStream().write(applyModifiers("m").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "up":
+                                socket.getOutputStream().write(applyModifiers("e").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "full":
+                                socket.getOutputStream().write(applyModifiers("m").getBytes());
+                                socket.getOutputStream().flush();
+                                socket.getOutputStream().write(applyModifiers("e").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                        }
+
+                    }
+
+                    if (command[0].equals("rightClick") && command[1] != null){
+                        switch (command[1]) {
+                            case "down":
+                                socket.getOutputStream().write(applyModifiers("r").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "up":
+                                socket.getOutputStream().write(applyModifiers("t").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "full":
+                                socket.getOutputStream().write(applyModifiers("r").getBytes());
+                                socket.getOutputStream().flush();
+                                socket.getOutputStream().write(applyModifiers("t").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                        }
+
+                    }
+
+                    if (command[0].equals("middleClick") && command[1] != null){
+                        switch (command[1]) {
+                            case "down":
+                                socket.getOutputStream().write(applyModifiers("n").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "up":
+                                socket.getOutputStream().write(applyModifiers("o").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                            case "full":
+                                socket.getOutputStream().write(applyModifiers("n").getBytes());
+                                socket.getOutputStream().flush();
+                                socket.getOutputStream().write(applyModifiers("o").getBytes());
+                                socket.getOutputStream().flush();
+                                break;
+                        }
+
+                    }
+                }
+            }catch(IOException | InterruptedException e){
+                e.printStackTrace();
+            }
+
+            if (newIP){
+                newIP = false;
+            }
+
+            return null;
+        }
+
+        String applyModifiers(String initString){
+            String writeParams = initString;
+            if (ctrlPressed){
+                writeParams += "a";
+            }
+            if (altPressed){
+                writeParams += "b";
+            }
+            if (shiftPressed){
+                writeParams += "c";
+            }
+            if (winPressed){
+                writeParams += "d";
+            }
+
+            writeParams += ":";
+            return writeParams;
         }
     }
 
@@ -826,7 +952,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 hiddenKeyBuffer.setText(getString(R.string.initialHiddenBufferText));
                 previousBufLength = 2;
                 hiddenKeyBuffer.addTextChangedListener(hiddenTextWatcher);
-                keyboardBuf = "";
             });
 
             try {
@@ -834,12 +959,10 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            endMouseDrag();
-            scroll = 0;
 
             boolean keepLooping = true;
             while (keepLooping){
-                if (socket == null || !socket.isConnected() || !transmitData() || scan){
+                if (socket == null || !socket.isConnected() || scan){
                     keepLooping = false;
                 }
             }
@@ -857,118 +980,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             if (!scan) {
                 runOnUiThread(() -> connectionStatusText.setText(R.string.failedConnectionText));
             }
-        }
-
-        String applyModifiers(String initString){
-            String writeParams = initString;
-            if (ctrlPressed){
-                writeParams += "a";
-            }
-            if (altPressed){
-                writeParams += "b";
-            }
-            if (shiftPressed){
-                writeParams += "c";
-            }
-            if (winPressed){
-                writeParams += "d";
-            }
-
-            writeParams += ":";
-            return writeParams;
-        }
-
-        void endMouseDrag(){
-            mouseDragEnd = false;
-            mouseDrag = false;
-            mouseDragStart = false;
-            rightDragEnd = false;
-            rightDrag = false;
-            rightDragStart = false;
-            middleDragEnd = false;
-            middleDragStart = false;
-        }
-
-        boolean transmitData(){
-            try{
-                if (socket != null) {
-                    if (transmitMovement) {
-                        socket.getOutputStream().write((Math.round(xSpeed) + " " + Math.round(ySpeed) + ";").getBytes());
-                        socket.getOutputStream().flush();
-                        if (!mouseKeyPressed){
-                            xSpeed = 0;
-                            ySpeed = 0;
-                        }
-                        Thread.sleep(30);
-                    }
-
-                    if (sendPing) {
-                        socket.getOutputStream().write(("g").getBytes());
-                        socket.getOutputStream().flush();
-                        sendPing = false;
-                    }else if (!Objects.equals(keyboardBuf, "") && !amTyping){
-                        if (keyboardBuf.contains("\t")) {
-                            socket.getOutputStream().write((applyModifiers("k") + "\\t").getBytes());
-                            socket.getOutputStream().flush();
-                        }else {
-                            socket.getOutputStream().write((applyModifiers("k") + keyboardBuf).getBytes());
-                            socket.getOutputStream().flush();
-                        }
-                        keyboardBuf = "";
-                    }else if (scroll != 0){
-                        if (scroll == 1){
-                            socket.getOutputStream().write(applyModifiers("sv").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (scroll == 2){
-                            socket.getOutputStream().write(applyModifiers("su").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (scroll == 3){
-                            socket.getOutputStream().write(applyModifiers("sr").getBytes());
-                            socket.getOutputStream().flush();
-                        }else if (scroll == 4){
-                            socket.getOutputStream().write(applyModifiers("sl").getBytes());
-                            socket.getOutputStream().flush();
-                        }
-                        scroll = 0;
-                    }else if (mouseDragStart){
-                        mouseDragStart = false;
-                        mouseDrag = true;
-                        socket.getOutputStream().write(applyModifiers("m").getBytes());
-                        socket.getOutputStream().flush();
-                    }else if (mouseDragEnd){
-                        endMouseDrag();
-                        socket.getOutputStream().write(applyModifiers("e").getBytes());
-                        socket.getOutputStream().flush();
-                    }else if (rightDragStart && !mouseDrag){
-                        rightDragStart = false;
-                        rightDrag = true;
-                        socket.getOutputStream().write(applyModifiers("r").getBytes());
-                        socket.getOutputStream().flush();
-                    }else if (rightDragEnd && !mouseDrag){
-                        endMouseDrag();
-                        socket.getOutputStream().write(applyModifiers("t").getBytes());
-                        socket.getOutputStream().flush();
-                    }else if (middleDragStart && !mouseDrag && !rightDrag){
-                        middleDragStart = false;
-                        socket.getOutputStream().write(applyModifiers("n").getBytes());
-                        socket.getOutputStream().flush();
-                    }else if (middleDragEnd && !mouseDrag && !rightDrag){
-                        endMouseDrag();
-                        socket.getOutputStream().write(applyModifiers("o").getBytes());
-                        socket.getOutputStream().flush();
-                    }
-                }
-            }catch(IOException | InterruptedException e){
-                e.printStackTrace();
-                return false;
-            }
-
-            if (newIP){
-                newIP = false;
-                return false;
-            }
-
-            return true;
         }
 
     }

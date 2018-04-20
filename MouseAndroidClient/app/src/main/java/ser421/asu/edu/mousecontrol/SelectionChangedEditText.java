@@ -1,5 +1,6 @@
 package ser421.asu.edu.mousecontrol;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.AppCompatEditText;
 import android.util.AttributeSet;
@@ -22,20 +23,20 @@ public class SelectionChangedEditText extends AppCompatEditText {
 
         if (selEnd == 0){
             //System.out.println("up key pressed");
-            MainActivity.keyboardBuf += "\\u";
+            new MainActivity.CommandSender().execute("keyboard", "\\u");
         }else if (selEnd == getText().toString().length()){
             //System.out.println("down key pressed");
-            MainActivity.keyboardBuf += "\\d";
+            new MainActivity.CommandSender().execute("keyboard", "\\d");
         }else if (selEnd == getText().toString().length()-3){
             //System.out.println("left key pressed");
             if (!MainActivity.ignoreLeftArrow){
-                MainActivity.keyboardBuf += "\\l";
+                new MainActivity.CommandSender().execute("keyboard", "\\l");
             }else {
                 MainActivity.ignoreLeftArrow = false;
             }
         }else if (selEnd == getText().toString().length()-1){
             //System.out.println("right key pressed");
-            MainActivity.keyboardBuf += "\\r";
+            new MainActivity.CommandSender().execute("keyboard", "\\r");
         }
 
         Log.i("MyEditText", "onSelectionChanged: " + selStart + " - " + selEnd);
