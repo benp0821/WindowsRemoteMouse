@@ -12,9 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="ser421.asu.edu.mousecontrol.MainActivity"
-        android:focusable="true"
         android:orientation="vertical"
-        android:focusableInTouchMode="true" >
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:clickable="true">
 
         <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://schemas.android.com/tools"
@@ -22,46 +23,6 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center">
-
-            <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="start">
-
-                <ser421.asu.edu.mousecontrol.ClearFocusOnBackEditText
-                    android:id="@+id/ipAddrTxt"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:imeOptions="actionDone"
-                    android:inputType="textPersonName"
-                    android:selectAllOnFocus="true"
-                    android:text="@string/ipPlaceholderText"/>
-
-                <Button
-                    android:id="@+id/rescanBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rescanText" />
-
-                <Button
-                    android:id="@+id/continueBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/continueScanText"/>
-
-                <TextView
-                    android:id="@+id/connectionStatusTxt"
-                    android:layout_width="175dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginBottom="2dp"
-                    android:layout_marginStart="2dp"
-                    android:text="@string/initializing" />
-
-            </android.widget.LinearLayout>
 
             <View
                 android:layout_width="wrap_content"
@@ -79,7 +40,10 @@
                     android:id="@+id/leftUpBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
+                    android:layout_gravity="fill"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/upBtn"
@@ -87,13 +51,19 @@
                     android:layout_height="50dp"
                     android:layout_gravity="fill"
                     android:text="@string/upArrow"
-                    tools:text="^\n|" />
+                    tools:text="^\n|"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/rightUpBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
+                    android:layout_gravity="fill"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/leftBtn"
@@ -101,13 +71,19 @@
                     android:layout_height="50dp"
                     android:layout_gravity="fill"
                     android:text="@string/leftArrow"
-                    tools:text="&lt;&#8211;" />
+                    tools:text="&lt;&#8211;"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/arrowToggleBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_gravity="fill" />
+                    android:layout_gravity="fill"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/rightBtn"
@@ -115,13 +91,19 @@
                     android:layout_height="50dp"
                     android:layout_gravity="fill"
                     android:text="@string/rightArrow"
-                    tools:text="&#8211;&gt;" />
+                    tools:text="&#8211;&gt;"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/leftDownBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
+                    android:layout_gravity="fill"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
                 <Button
                     android:id="@+id/downBtn"
@@ -129,31 +111,19 @@
                     android:layout_height="50dp"
                     android:layout_gravity="fill"
                     android:text="@string/downArrow"
-                    tools:text="|\nv" />
+                    tools:text="|\nv"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true" />
 
                 <Button
                     android:id="@+id/rightDownBtn"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
-
-                <Button
-                    android:id="@+id/leftClickBtn"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
-
-                <Button
-                    android:id="@+id/midClickBtn"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
-
-                <Button
-                    android:id="@+id/rightClickBtn"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="fill"/>
+                    android:layout_gravity="fill"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:clickable="true"/>
 
             </android.widget.GridLayout>
 
@@ -172,22 +142,43 @@
             android:orientation="horizontal"
             android:gravity="center">
 
-            <View
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_weight=".1"
-                android:layout_gravity="bottom"/>
+            <Button
+                android:id="@+id/leftClickBtn"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="70dp"
+                android:layout_gravity="fill"
+                android:focusable="false"
+                android:onClick="leftClickBtnPressed"/>
+
+            <Button
+                android:id="@+id/midClickBtn"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_gravity="fill"
+                android:focusable="false"
+                android:onClick="midClickBtnPressed"/>
+
+            <Button
+                android:id="@+id/rightClickBtn"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="70dp"
+                android:layout_gravity="fill"
+                android:focusable="false"
+                android:onClick="rightClickBtnPressed"/>
 
             <Button
                 android:id="@+id/keyboardButton"
                 android:layout_width="55dp"
-                android:layout_height="wrap_content"
-                android:text="@string/abc" />
+                android:layout_height="70dp"
+                android:text="@string/abc"
+                android:onClick="abcPressed"/>
 
         </android.widget.LinearLayout>
 
 
-        <ser421.asu.edu.mousecontrol.SelectionChangedEditText
+        <ser421.asu.edu.mousecontrol.HiddenBufferEditText
             android:id="@+id/hiddenKeyBuffer"
             android:layout_width="0dp"
             android:layout_height="0dp"
