@@ -11,7 +11,7 @@
         android:id="@+id/layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="ser421.asu.edu.mousecontrol.MainActivity"
+        tools:context="com.ben.mousecontrol.MainActivity"
         android:orientation="vertical"
         android:focusableInTouchMode="true"
         android:focusable="true"
@@ -178,7 +178,7 @@
         </android.widget.LinearLayout>
 
 
-        <ser421.asu.edu.mousecontrol.HiddenBufferEditText
+        <com.ben.mousecontrol.HiddenBufferEditText
             android:id="@+id/hiddenKeyBuffer"
             android:layout_width="0dp"
             android:layout_height="0dp"

@@ -22,11 +22,11 @@ def parse_command(data):
         btn = 'left'
         for param in data:
             if param[:7] == "amount=":
-                amount = param[7:]
+                amount = int(param[7:])
             elif param[:4] == "btn=":
                 btn = param[4:]
         WindowsControl.click(amount=amount, btn=btn)
-        return "mouse click;"
+        return "mouse clicked " + str(amount) + ";"
     elif data[0] == "mouseMove":
         WindowsControl.move_rel(data[1], data[2])
         return "mouse moved " + data[1] + " " + data[2] + ";"
