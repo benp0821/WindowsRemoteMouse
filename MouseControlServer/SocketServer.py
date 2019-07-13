@@ -22,20 +22,23 @@ def parse_command(data):
         btn = 'left'
         for param in data:
             if param[:7] == "amount=":
-                amount = int(param[7:])
+                amount = param[7:]
             elif param[:4] == "btn=":
                 btn = param[4:]
         WindowsControl.click(amount=amount, btn=btn)
-        return "mouse clicked " + str(amount) + ";"
+        return "mouse click;"
     elif data[0] == "mouseMove":
         WindowsControl.move_rel(data[1], data[2])
         return "mouse moved " + data[1] + " " + data[2] + ";"
     elif data[0] == "mouseDrag":
-        WindowsControl.drag_rel(data[1], data[2])
-        return "mouse dragged " + data[1] + " " + data[2] + ";"
+        WindowsControl.drag_rel()
+        return "mouse drag start;"
     elif data[0] == "vscroll":
-        next
+        WindowsControl.vscroll_wheel(data[1])
+        return "vertical scroll;"
     elif data[0] == "hscroll":
+        WindowsControl.hscroll_wheel(data[1])
+        return "horizontal scroll;"
         next
     elif data[0] == "keyPress":
         next
