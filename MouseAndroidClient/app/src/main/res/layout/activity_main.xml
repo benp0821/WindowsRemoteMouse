@@ -30,6 +30,18 @@
                 android:layout_weight=".1"
                 android:layout_gravity="fill"/>
 
+            <com.ben.mousecontrol.HiddenBufferEditText
+                android:id="@+id/hiddenKeyBuffer"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:ems="10"
+                android:inputType="textNoSuggestions"
+                android:imeOptions="actionNext"
+                android:text="@string/initialHiddenBufferText"
+                android:hint=""
+                tools:text="@string/initialHiddenBufferText"
+                android:privateImeOptions="nm"/>
+
             <android.widget.GridLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -176,18 +188,6 @@
                 android:onClick="abcPressed"/>
 
         </android.widget.LinearLayout>
-
-
-        <com.ben.mousecontrol.HiddenBufferEditText
-            android:id="@+id/hiddenKeyBuffer"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:ems="10"
-            android:inputType="textNoSuggestions"
-            android:imeOptions="actionNext"
-            android:text="@string/initialHiddenBufferText"
-            android:hint=""
-            tools:text="@string/initialHiddenBufferText" />
     </android.widget.LinearLayout>
 
     <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"

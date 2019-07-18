@@ -2,7 +2,9 @@ import pyautogui
 import win32api
 import win32gui
 import ctypes
+import win32clipboard
 from win32con import *
+from pynput.keyboard import Key, Controller
 
 
 def click(amount=1, btn='left'):
@@ -25,16 +27,78 @@ def vscroll_wheel(scroll=-4):
 
 def hscroll_wheel(scroll=-4):
     x, y = win32api.GetCursorPos();
-    win32api.mouse_event(0x01000, x, y, int(scroll), 0) #MOUSEEVENTF_HWHEEL
+    win32api.mouse_event(0x01000, x, y, int(scroll), 0)  # MOUSEEVENTF_HWHEEL
 
 
-def key_press(key):
-    pyautogui.press(key)
+def keyboard_entry(phrase):
+    keyboard = Controller()
 
+    if phrase == "\\t":
+        keyboard.press('\t')
+        return
+    elif phrase == "\\s":
+        keyboard.press(' ')
+        return
+    elif phrase == "\\n":
+        keyboard.press('\n')
+        return
+    elif phrase == "\\b":
+        keyboard.press(Key.backspace)
+        return
+    elif phrase == "\\l":
+        keyboard.press(Key.left)
+        return
+    elif phrase == "\\r":
+        keyboard.press(Key.right)
+        return
+    elif phrase == "\\u":
+        keyboard.press(Key.up)
+        return
+    elif phrase == "\\d":
+        keyboard.press(Key.down)
+        return
+    # pyautogui can't handle shift + arrow combinations, as it requires the KEYEVENTF_EXTENDEDKEY flag
+    elif phrase == "\\hl":
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(VK_LEFT, 0, 1, 0)
+        ctypes.windll.user32.keybd_event(VK_LEFT, 0, (1 | 2), 0)
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        return
+    elif phrase == "\\hr":
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(VK_RIGHT, 0, 1, 0)
+        ctypes.windll.user32.keybd_event(VK_RIGHT, 0, (1 | 2), 0)
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        return
+    elif phrase == "\\hu":
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(VK_UP, 0, 1, 0)
+        ctypes.windll.user32.keybd_event(VK_UP, 0, (1 | 2), 0)
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        return
+    elif phrase == "\\hd":
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(VK_DOWN, 0, 1, 0)
+        ctypes.windll.user32.keybd_event(VK_DOWN, 0, (1 | 2), 0)
+        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        return
+    elif phrase == "\\ha":
+        pyautogui.hotkey("ctrl", "a")
+        return
 
-def key_down(key):
-    pyautogui.keyDown(key)
+    try:
+        keyboard.type(phrase)
+    except ctypes.ArgumentError:
+        # Workaround to get emojis to be handled correctly
+        win32clipboard.OpenClipboard()
+        data = win32clipboard.GetClipboardData()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(CF_UNICODETEXT, phrase)
+        win32clipboard.CloseClipboard()
 
+        pyautogui.hotkey("ctrl", "v")
 
-def key_up(key):
-    pyautogui.keyUp(key)
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(CF_UNICODETEXT, data)
+        win32clipboard.CloseClipboard()

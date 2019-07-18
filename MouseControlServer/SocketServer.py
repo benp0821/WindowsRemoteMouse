@@ -39,13 +39,9 @@ def parse_command(data):
     elif data[0] == "hscroll":
         WindowsControl.hscroll_wheel(data[1])
         return "horizontal scroll;"
-        next
-    elif data[0] == "keyPress":
-        next
-    elif data[0] == "keyDown":
-        next
-    elif data[0] == "keyUp":
-        next
+    elif data[0] == "k":
+        WindowsControl.keyboard_entry(data[1])
+        return "keyboard: " + data[1] + ";"
     else:
         return data[0] + " is not a recognized command;"
     return 0

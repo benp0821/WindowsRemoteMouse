@@ -1,8 +1,10 @@
 package com.ben.mousecontrol;
 
 import android.annotation.SuppressLint;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     int multiTouch = 0;
     long touchStartTime = 0;
     boolean scroll = false;
+    boolean keyboardPinned = false; //TODO: Implement this functionality
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -26,17 +29,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(com.ben.mousecontrol.R.layout.activity_main);
 
         EditText hiddenKeyBuffer = findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         hiddenKeyBuffer.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
             }
         });
 
+        KeyboardInterpreter.startKeyListener(this);
+
         View view = findViewById(com.ben.mousecontrol.R.id.layout);
 
         detector = new GestureDetector(this, new GestureInterpreter());
         @SuppressLint("ClickableViewAccessibility") View.OnTouchListener touchListener = (v, event) -> {
             int action = event.getActionMasked();
+
+            if (!keyboardPinned) {
+                CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
+            }
 
             detector.onTouchEvent(event);
 

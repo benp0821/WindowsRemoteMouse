@@ -1,12 +1,18 @@
 package com.ben.mousecontrol;
 
 import android.content.Context;
+import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 
 public class HiddenBufferEditText extends android.support.v7.widget.AppCompatEditText{
+
+    private final AppCompatActivity activity;
+
     public HiddenBufferEditText(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
+
+        activity = (AppCompatActivity)context;
     }
 
     @Override
@@ -18,5 +24,12 @@ public class HiddenBufferEditText extends android.support.v7.widget.AppCompatEdi
             }
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    protected void onSelectionChanged(int selStart, int selEnd){
+        super.onSelectionChanged(selStart, selEnd);
+
+        KeyboardInterpreter.selectionChanged(activity, selStart, selEnd);
     }
 }
