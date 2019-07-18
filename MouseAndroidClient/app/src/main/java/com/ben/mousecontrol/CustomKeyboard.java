@@ -10,11 +10,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class CustomKeyboard {
+class CustomKeyboard {
 
-    public static boolean visible = false;
+    static boolean visible = false;
 
-    public static void setKeyboardVisiblity(EditText textBox, boolean isVisible){
+    static void setKeyboardVisiblity(EditText textBox, boolean isVisible){
         visible = isVisible;
 
         Button abcButton = ((Activity)textBox.getContext()).findViewById(R.id.keyboardButton);

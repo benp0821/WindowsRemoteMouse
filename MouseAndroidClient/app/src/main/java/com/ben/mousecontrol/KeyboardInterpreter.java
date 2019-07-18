@@ -2,18 +2,25 @@ package com.ben.mousecontrol;
 
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 
-public class KeyboardInterpreter {
+class KeyboardInterpreter {
 
     private static int ignoreArrowPress = 0;
 
-    public static void startKeyListener(AppCompatActivity context){
+    static void startKeyListener(AppCompatActivity context){
 
         EditText hiddenKeyBuffer = context.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
         hiddenKeyBuffer.setSelection(2);
+        hiddenKeyBuffer.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        hiddenKeyBuffer.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
+            }
+        });
 
         TextWatcher hiddenTextWatcher = new TextWatcher() {
             @Override
@@ -61,7 +68,7 @@ public class KeyboardInterpreter {
         });
     }
 
-    public static void selectionChanged(AppCompatActivity activity, int selStart, int selEnd){
+    static void selectionChanged(AppCompatActivity activity, int selStart, int selEnd){
         if (activity == null){
             return;
         }
