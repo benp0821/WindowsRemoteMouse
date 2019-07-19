@@ -20,6 +20,7 @@ public class HiddenBufferEditText extends android.support.v7.widget.AppCompatEdi
         if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (CustomKeyboard.visible) {
                 CustomKeyboard.setKeyboardVisiblity(this, false);
+                KeyboardInterpreter.keyboardPinned = false;
                 return true;
             }
         }

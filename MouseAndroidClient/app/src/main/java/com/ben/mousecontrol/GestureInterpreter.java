@@ -16,7 +16,6 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
     private static int multiTouch = 0;
     private static long touchStartTime = 0;
     private static boolean scroll = false;
-    private static boolean keyboardPinned = false; //TODO: Implement this functionality
 
     static void startGestureInterpreter(AppCompatActivity context){
         View view = context.findViewById(com.ben.mousecontrol.R.id.layout);
@@ -25,7 +24,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
         @SuppressLint("ClickableViewAccessibility") View.OnTouchListener touchListener = (v, event) -> {
             int action = event.getActionMasked();
 
-            if (!keyboardPinned) {
+            if (!KeyboardInterpreter.keyboardPinned) {
                 EditText hiddenKeyBuffer = context.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
                 CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
             }

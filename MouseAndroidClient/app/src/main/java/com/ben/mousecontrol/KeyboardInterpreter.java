@@ -1,15 +1,21 @@
 package com.ben.mousecontrol;
 
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 
 class KeyboardInterpreter {
 
     private static int ignoreArrowPress = 0;
+    static boolean keyboardPinned = false;
 
     static void startKeyListener(AppCompatActivity context){
 
@@ -65,6 +71,14 @@ class KeyboardInterpreter {
                 SocketClient.addCommand("k \\n");
             }
             return true;
+        });
+
+
+        Button pinBtn = context.findViewById(R.id.pinBtn);
+        pinBtn.setOnClickListener(view -> {
+            keyboardPinned = !keyboardPinned;
+
+            toggleCustomKeyPressed(view, keyboardPinned);
         });
     }
 
@@ -122,6 +136,14 @@ class KeyboardInterpreter {
         }
 
         hiddenKeyBuffer.setSelection(2, 2);
+    }
+
+    static void toggleCustomKeyPressed(View view, boolean isPressed){
+        if (isPressed){
+                view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+        }else{
+            view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        }
     }
 
 }
