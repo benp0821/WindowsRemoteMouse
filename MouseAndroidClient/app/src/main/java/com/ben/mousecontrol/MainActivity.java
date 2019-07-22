@@ -1,9 +1,5 @@
 package com.ben.mousecontrol;
 
-import android.gesture.Gesture;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -22,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
 
         KeyboardInterpreter.startKeyListener(this);
         GestureInterpreter.startGestureInterpreter(this);
+        ArrowButtonInterpreter.startArrowButtonInterpreter(this);
     }
 
     @Override
