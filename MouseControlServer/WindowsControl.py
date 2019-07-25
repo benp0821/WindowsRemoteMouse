@@ -16,8 +16,12 @@ def move_rel(x, y):
     ctypes.windll.user32.SetCursorPos(c_x + int(x), c_y + int(y))
 
 
-def drag_rel():
+def drag_start():
     pyautogui.mouseDown()
+
+
+def drag_end():
+    pyautogui.mouseUp()
 
 
 def vscroll_wheel(scroll=-4):

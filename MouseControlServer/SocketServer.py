@@ -31,8 +31,11 @@ def parse_command(data):
         WindowsControl.move_rel(data[1], data[2])
         return "mouse moved " + data[1] + " " + data[2] + ";"
     elif data[0] == "mouseDrag":
-        WindowsControl.drag_rel()
+        WindowsControl.drag_start()
         return "mouse drag start;"
+    elif data[0] == "mouseDragEnd":
+        WindowsControl.drag_end()
+        return "mouse drag end;"
     elif data[0] == "vscroll":
         WindowsControl.vscroll_wheel(data[1])
         return "vertical scroll;"
@@ -44,7 +47,6 @@ def parse_command(data):
         return "keyboard: " + data[1] + ";"
     else:
         return data[0] + " is not a recognized command;"
-    return 0
 
 
 def client_thread(conn):
