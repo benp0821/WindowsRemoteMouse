@@ -2,6 +2,9 @@ package com.ben.mousecontrol;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
@@ -127,6 +130,8 @@ class ArrowButtonInterpreter {
         Runnable runnable;
         if (event.getAction() == MotionEvent.ACTION_DOWN){
             if (!buttonPressed) {
+                view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+
                 buttonPressed = true;
                 runnable = new Runnable() {
                     public void run() {
@@ -150,6 +155,7 @@ class ArrowButtonInterpreter {
             }
         }else if (event.getAction() == MotionEvent.ACTION_UP){
             buttonPressed = false;
+            view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
         }
     }
 

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -23,6 +24,8 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
     private static long touchStartTime = 0;
     private static boolean scroll = false;
     private static boolean buttonPressed = false;
+    private static boolean singleTap = false;
+    private static boolean multiTap = false;
 
     static void startGestureInterpreter(AppCompatActivity context){
         View view = context.findViewById(com.ben.mousecontrol.R.id.layout);
@@ -91,6 +94,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
             mouseDragging = "false";
         }
         SocketClient.addCommand("mouseClick");
+        singleTap = true;
         return true;
     }
 
@@ -130,6 +134,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
                 startDragging("left");
         }else if (motionEvent.getAction() == MotionEvent.ACTION_UP && mouseDragging.equals("false")){
             SocketClient.addCommand("mouseClick");
+            singleTap = true;
         }
         return true;
     }
@@ -167,6 +172,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
         if (multiTouch == 2 && action == MotionEvent.ACTION_UP && System.currentTimeMillis() - touchStartTime < 600 && !scroll){
             SocketClient.addCommand("mouseClick btn=right");
             multiTouch = 0;
+            multiTap = true;
         }
 
         if (multiTouch == 2 && !mouseDragging.equals("false") && !scroll){
@@ -188,6 +194,26 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
 
             Button midClickBtn = context.findViewById(R.id.midClickBtn);
             midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        }
+
+        //Makes left button turn green when tap gesture is used for left click
+        if (singleTap){
+            Button leftClickBtn = context.findViewById(R.id.leftClickBtn);
+            leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            singleTap = false;
+            Handler handler = new Handler();
+            Runnable runnable = () -> leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            handler.postDelayed(runnable, 100);
+        }
+
+        if (multiTap){
+            //Makes right button turn green when multi-tap gesture is used for right click
+            Button rightClickBtn = context.findViewById(R.id.rightClickBtn);
+            rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            multiTap = false;
+            Handler handler = new Handler();
+            Runnable runnable = () -> rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+            handler.postDelayed(runnable, 100);
         }
     }
 
