@@ -22,6 +22,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
     private static int multiTouch = 0;
     private static long touchStartTime = 0;
     private static boolean scroll = false;
+    private static boolean buttonPressed = false;
 
     static void startGestureInterpreter(AppCompatActivity context){
         View view = context.findViewById(com.ben.mousecontrol.R.id.layout);
@@ -226,38 +227,49 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN){
             onMouseDown(motionEvent);
 
-            if (button.equals("left") && mouseDragging.equals("false")){
-                Button leftClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.leftClickBtn);
-                leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else if (button.equals("right") && mouseDragging.equals("false")){
-                Button rightClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.rightClickBtn);
-                rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-            }else if (button.equals("middle") && mouseDragging.equals("false")){
-                Button midClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.midClickBtn);
-                midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+            if (mouseDragging.equals("false")) {
+                if (button.equals("left")) {
+                    Button leftClickBtn = ((AppCompatActivity) view1.getContext()).findViewById(R.id.leftClickBtn);
+                    leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+                } else if (button.equals("right")) {
+                    Button rightClickBtn = ((AppCompatActivity) view1.getContext()).findViewById(R.id.rightClickBtn);
+                    rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+                } else if (button.equals("middle")) {
+                    Button midClickBtn = ((AppCompatActivity) view1.getContext()).findViewById(R.id.midClickBtn);
+                    midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
+                }
+
+                buttonPressed = true;
             }
         }
 
         if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+            if (!mouseDragging.equals("false") && !buttonPressed) {
+                SocketClient.addCommand("mouseDragEnd " + mouseDragging);
+                mouseDragging = "false";
+            }
+
             if (mouseDragging.equals("false")){
                 SocketClient.addCommand("mouseClick btn=" + button);
 
-                if (button.equals("left")){
-                    Button leftClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.leftClickBtn);
-                    leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                }else if (button.equals("right")){
-                    Button rightClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.rightClickBtn);
-                    rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                }else if (button.equals("middle")){
-                    Button midClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.midClickBtn);
-                    midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-                }
+                Button leftClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.leftClickBtn);
+                leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+                Button rightClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.rightClickBtn);
+                rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+                Button midClickBtn = ((AppCompatActivity)view1.getContext()).findViewById(R.id.midClickBtn);
+                midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
             }
+
+            buttonPressed = false;
         }
 
         if (motionEvent.getAction() == MotionEvent.ACTION_MOVE){
             if (Math.abs(motionEvent.getX() - startX) > 5 || Math.abs(motionEvent.getY() - startY) > 5){
                 startDragging(button);
+                buttonPressed = true;
             }
 
             onMouseMove(motionEvent);
