@@ -14,7 +14,7 @@ import android.widget.EditText;
 
 class KeyboardInterpreter {
 
-    private static int ignoreArrowPress = 0;
+    private static int ignoreArrowPress = 2;
     static boolean keyboardPinned = false;
 
     static void startKeyListener(AppCompatActivity context){
