@@ -14,8 +14,8 @@
       <file leaf-file-name="WindowsControl.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WindowsControl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
+            <state relative-caret-position="357">
+              <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -26,7 +26,7 @@
       <file leaf-file-name="SocketServer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SocketServer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="493">
+            <state relative-caret-position="544">
               <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
@@ -53,7 +53,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="738" />
     <option name="y" value="250" />
     <option name="width" value="2484" />
@@ -482,7 +482,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SocketServer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
+        <state relative-caret-position="544">
           <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
@@ -492,8 +492,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WindowsControl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
+        <state relative-caret-position="357">
+          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

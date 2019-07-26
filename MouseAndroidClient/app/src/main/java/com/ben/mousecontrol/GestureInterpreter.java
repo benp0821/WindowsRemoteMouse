@@ -19,7 +19,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
     private static float initX = 0;
     private static float initY = 0;
     private static boolean mouseMove = false;
-    private static String mouseDragging = "false";
+    static String mouseDragging = "false";
     private static int multiTouch = 0;
     private static long touchStartTime = 0;
     private static boolean scroll = false;

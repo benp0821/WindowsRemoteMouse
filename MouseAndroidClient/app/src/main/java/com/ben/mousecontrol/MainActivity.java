@@ -2,11 +2,17 @@ package com.ben.mousecontrol;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,11 +20,9 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
 
@@ -35,10 +39,30 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.ben.mousecontrol.R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         KeyboardInterpreter.startKeyListener(this);
         GestureInterpreter.startGestureInterpreter(this);
         ArrowButtonInterpreter.startArrowButtonInterpreter(this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.scan:
+
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -76,6 +100,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onPause(){
+        if (!GestureInterpreter.mouseDragging.equals("false")) {
+            SocketClient.addCommand("mouseDragEnd " + GestureInterpreter.mouseDragging);
+            GestureInterpreter.mouseDragging = "false";
+
+            Button leftClickBtn = findViewById(R.id.leftClickBtn);
+            leftClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+            Button rightClickBtn = findViewById(R.id.rightClickBtn);
+            rightClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+
+            Button midClickBtn = findViewById(R.id.midClickBtn);
+            midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
+        }
+
         try {
             thread.interrupt();
         }catch (Exception e){
