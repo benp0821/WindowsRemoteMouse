@@ -31,10 +31,16 @@ def parse_command(data):
         WindowsControl.move_rel(data[1], data[2])
         return "mouse moved " + data[1] + " " + data[2] + ";"
     elif data[0] == "mouseDrag":
-        WindowsControl.drag_start()
+        btn = 'left'
+        if data[1]:
+            btn = data[1]
+        WindowsControl.drag_start(btn=btn)
         return "mouse drag start;"
     elif data[0] == "mouseDragEnd":
-        WindowsControl.drag_end()
+        btn = 'left'
+        if data[1]:
+            btn = data[1]
+        WindowsControl.drag_end(btn=btn)
         return "mouse drag end;"
     elif data[0] == "vscroll":
         WindowsControl.vscroll_wheel(data[1])

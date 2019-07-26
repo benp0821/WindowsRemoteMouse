@@ -210,17 +210,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    public void leftClickBtnPressed(View view) {
-        SocketClient.addCommand("mouseClick");
-    }
-
-    public void midClickBtnPressed(View view) {
-        SocketClient.addCommand("mouseClick btn=middle");
-    }
-
-    public void rightClickBtnPressed(View view) {
-        SocketClient.addCommand("mouseClick btn=right");
-    }
-
 }

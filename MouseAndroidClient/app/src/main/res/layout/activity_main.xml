@@ -167,8 +167,7 @@
                 android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:layout_gravity="fill"
-                android:focusable="false"
-                android:onClick="midClickBtnPressed"/>
+                android:focusable="false"/>
 
             <Button
                 android:id="@+id/rightClickBtn"
@@ -176,8 +175,7 @@
                 android:layout_weight="0.5"
                 android:layout_height="70dp"
                 android:layout_gravity="fill"
-                android:focusable="false"
-                android:onClick="rightClickBtnPressed"/>
+                android:focusable="false"/>
 
             <Button
                 android:id="@+id/keyboardButton"
