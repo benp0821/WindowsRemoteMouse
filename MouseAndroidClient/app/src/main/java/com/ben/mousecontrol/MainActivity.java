@@ -13,13 +13,18 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -58,6 +63,30 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    public void manualIPEntered(EditText input, AlertDialog dialog){
+        if (!input.getText().toString().equals("")) {
+            InputMethodManager inputManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputManager != null) {
+                inputManager.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+
+            dialog.dismiss();
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+            SharedPreferences.Editor editor = pref.edit();
+            ip = input.getText().toString();
+            editor.putString("ipAddr", ip);
+            editor.apply();
+
+            endNetworkingTasks();
+
+            client = new SocketClient(this, ip, 8888); //192.168.1.8
+
+            thread = new Thread(client);
+            thread.start();
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -77,33 +106,38 @@ public class MainActivity extends AppCompatActivity {
                 View viewInflated = LayoutInflater.from(this).inflate(R.layout.manual_ip_popup, findViewById(R.id.layout), false);
                 final EditText input = viewInflated.findViewById(R.id.input);
                 input.setText(ip);
+                input.setSelection(ip.length());
                 builder.setView(viewInflated);
                 builder.setPositiveButton(android.R.string.ok, null);
-                builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+                builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                    InputMethodManager inputManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (inputManager != null) {
+                        inputManager.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    }
+
+                    dialog.cancel();
+                });
                 AlertDialog dialog = builder.create();
+                dialog.setCanceledOnTouchOutside(false);
 
                 dialog.setOnShowListener(dialog1 -> {
                     Button b = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
                     b.setOnClickListener(view -> {
-                        if (!input.getText().toString().equals("")) {
-                            dialog.dismiss();
-
-                            SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
-                            SharedPreferences.Editor editor = pref.edit();
-                            ip = input.getText().toString();
-                            editor.putString("ipAddr", ip);
-                            editor.apply();
-
-                            endNetworkingTasks();
-
-                            client = new SocketClient(this, ip, 8888); //192.168.1.8
-
-                            thread = new Thread(client);
-                            thread.start();
-                        }
+                        manualIPEntered(input, dialog);
                     });
                 });
+
+                if (dialog.getWindow() != null){
+                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                }
                 dialog.show();
+
+                input.setOnEditorActionListener((v, actionId, event) -> {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        manualIPEntered(input, dialog);
+                    }
+                    return false;
+                });
 
             default:
                 break;
