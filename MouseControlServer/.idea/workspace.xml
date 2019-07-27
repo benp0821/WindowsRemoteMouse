@@ -14,8 +14,8 @@
       <file leaf-file-name="WindowsControl.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WindowsControl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+            <state relative-caret-position="425">
+              <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -53,7 +53,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="738" />
     <option name="y" value="250" />
     <option name="width" value="2484" />
@@ -133,15 +133,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="59" y="-7" width="2142" height="1248" extended-state="7" />
+    <frame x="59" y="-7" width="2142" height="1248" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10573308" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.48637217" side_tool="true" visible="true" weight="0.32951543" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.4868421" side_tool="true" visible="true" weight="0.32951543" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.5136278" visible="true" weight="0.32951543" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.5131579" visible="true" weight="0.32951543" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -492,8 +492,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WindowsControl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+        <state relative-caret-position="425">
+          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     volatile String ip;
     Handler scanTextHandler;
     Runnable scanTextRunnable;
+    int scanCounter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
                     FindIP finderClass = new FindIP(this);
                     findThread = new Thread(finderClass);
                     findThread.start();
+                }else{
+                    scanCounter = 0;
                 }
                 break;
             case R.id.manual:
@@ -240,15 +243,15 @@ public class MainActivity extends AppCompatActivity {
             };
             runOnUiThread(scanTextRunnable);
 
-            int counter = 0;
-            while (counter < 255) {
+            scanCounter = 0;
+            while (scanCounter < 255) {
                 if (findThread.isInterrupted()){
                     return "";
                 }
 
                 Socket s = null;
                 try {
-                    ipAddr = prefix + String.valueOf(counter);
+                    ipAddr = prefix + String.valueOf(scanCounter);
                     s = new Socket();
                     s.connect(new InetSocketAddress(ipAddr, 8888), 5000);
                     scanTextHandler.removeCallbacks(scanTextRunnable);
@@ -264,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-                counter++;
+                scanCounter++;
             }
 
 
