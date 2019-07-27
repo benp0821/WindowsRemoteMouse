@@ -1,6 +1,7 @@
 package com.ben.mousecontrol;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -9,11 +10,14 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -57,8 +61,47 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.scan:
-
+                if (findThread == null || !findThread.isAlive()) {
+                    endNetworkingTasks();
+                    FindIP finderClass = new FindIP(this);
+                    findThread = new Thread(finderClass);
+                    findThread.start();
+                }
                 break;
+            case R.id.manual:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Enter IP: ");
+                View viewInflated = LayoutInflater.from(this).inflate(R.layout.manual_ip_popup, findViewById(R.id.layout), false);
+                final EditText input = viewInflated.findViewById(R.id.input);
+                input.setText(ip);
+                builder.setView(viewInflated);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+                AlertDialog dialog = builder.create();
+
+                dialog.setOnShowListener(dialog1 -> {
+                    Button b = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
+                    b.setOnClickListener(view -> {
+                        if (!input.getText().toString().equals("")) {
+                            dialog.dismiss();
+
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+                            SharedPreferences.Editor editor = pref.edit();
+                            ip = input.getText().toString();
+                            editor.putString("ipAddr", ip);
+                            editor.apply();
+
+                            endNetworkingTasks();
+
+                            client = new SocketClient(this, ip, 8888); //192.168.1.8
+
+                            thread = new Thread(client);
+                            thread.start();
+                        }
+                    });
+                });
+                dialog.show();
+
             default:
                 break;
         }
@@ -100,6 +143,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onPause(){
+        endNetworkingTasks();
+
+        super.onPause();
+    }
+
+    public void endNetworkingTasks(){
         if (!GestureInterpreter.mouseDragging.equals("false")) {
             SocketClient.addCommand("mouseDragEnd " + GestureInterpreter.mouseDragging);
             GestureInterpreter.mouseDragging = "false";
@@ -134,8 +183,6 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        super.onPause();
     }
 
     public void abcPressed(View view) {
@@ -226,18 +273,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            ip = findIpAddress();
+            String temp = findIpAddress();
+            if (temp != null) {
+                if (thread == null || !thread.isAlive()) {
+                    ip = temp;
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+                    SharedPreferences.Editor editor = pref.edit();
+                    editor.putString("ipAddr", ip);
+                    editor.apply();
 
-            if (ip != null) {
-                SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
-                SharedPreferences.Editor editor = pref.edit();
-                editor.putString("ipAddr", ip);
-                editor.apply();
+                    client = new SocketClient(context, ip, 8888);
 
-                client = new SocketClient(context, ip, 8888);
-
-                thread = new Thread(client);
-                thread.start();
+                    thread = new Thread(client);
+                    thread.start();
+                }
             } else {
                 try {
                     scanTextHandler.removeCallbacks(scanTextRunnable);
