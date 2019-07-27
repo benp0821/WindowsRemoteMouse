@@ -101,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.manual:
+                EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
+                CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
+                KeyboardInterpreter.keyboardPinned = false;
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Enter IP: ");
                 View viewInflated = LayoutInflater.from(this).inflate(R.layout.manual_ip_popup, findViewById(R.id.layout), false);
