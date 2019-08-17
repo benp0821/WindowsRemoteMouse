@@ -14,8 +14,8 @@
       <file leaf-file-name="WindowsControl.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WindowsControl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="425">
-              <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
+            <state relative-caret-position="492">
+              <caret line="101" lean-forward="true" selection-start-line="101" selection-end-line="101" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -26,8 +26,8 @@
       <file leaf-file-name="SocketServer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SocketServer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="544">
-              <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
+            <state relative-caret-position="-851">
+              <caret line="25" column="37" lean-forward="true" selection-start-line="25" selection-start-column="37" selection-end-line="25" selection-end-column="37" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -54,16 +54,17 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="738" />
-    <option name="y" value="250" />
-    <option name="width" value="2484" />
-    <option name="height" value="1784" />
+    <option name="x" value="736" />
+    <option name="y" value="248" />
+    <option name="width" value="2485" />
+    <option name="height" value="1785" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -75,7 +76,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -133,15 +133,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="59" y="-7" width="2142" height="1248" extended-state="6" />
-    <editor active="true" />
+    <frame x="60" y="-7" width="2141" height="1248" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10573308" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.105312645" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.4868421" side_tool="true" visible="true" weight="0.32951543" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.48942173" side_tool="true" visible="true" weight="0.32951543" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.5131579" visible="true" weight="0.32951543" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.5105783" weight="0.32951543" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -178,6 +177,26 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/WindowsControl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SocketServer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/WindowsControl.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
@@ -482,8 +501,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SocketServer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
+        <state relative-caret-position="-851">
+          <caret line="25" column="37" lean-forward="true" selection-start-line="25" selection-start-column="37" selection-end-line="25" selection-end-column="37" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>
@@ -492,8 +511,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WindowsControl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="425">
-          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
+        <state relative-caret-position="492">
+          <caret line="101" lean-forward="true" selection-start-line="101" selection-end-line="101" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

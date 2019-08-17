@@ -1,6 +1,9 @@
 package com.ben.mousecontrol;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.view.KeyEvent;

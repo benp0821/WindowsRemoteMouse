@@ -5,7 +5,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -21,7 +20,6 @@ class KeyboardInterpreter {
 
         EditText hiddenKeyBuffer = context.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
         hiddenKeyBuffer.setSelection(2);
-        hiddenKeyBuffer.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         hiddenKeyBuffer.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
@@ -131,8 +129,8 @@ class KeyboardInterpreter {
         }
 
         if (!hiddenKeyBuffer.getText().toString().equals("////")){
-            hiddenKeyBuffer.getText().replace(0, hiddenKeyBuffer.getText().length(), "////");
             ignoreArrowPress = 4;
+            hiddenKeyBuffer.setText("////");
         }
 
         hiddenKeyBuffer.setSelection(2, 2);
