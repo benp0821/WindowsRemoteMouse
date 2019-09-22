@@ -37,17 +37,11 @@ def hscroll_wheel(scroll=-4):
 def keyboard_entry(phrase):
     keyboard = Controller()
 
-    if phrase == "\\t":
-        keyboard.press('\t')
-        return
-    elif phrase == "\\s":
-        keyboard.press(' ')
-        return
-    elif phrase == "\\n":
-        keyboard.press('\n')
-        return
-    elif phrase == "\\b":
-        keyboard.press(Key.backspace)
+    phrase = phrase.replace("\\t", "\t");
+    phrase = phrase.replace("\\s", " ");
+
+    if phrase == "\\n":
+        keyboard.press(Key.enter)
         return
     elif phrase == "\\l":
         keyboard.press(Key.left)
@@ -91,7 +85,15 @@ def keyboard_entry(phrase):
         return
 
     try:
-        keyboard.type(phrase)
+        i = 0
+        while i < len(phrase):
+            if i < len(phrase) - 1 and phrase[i] == "\\" and phrase[i+1] == "b":
+                keyboard.press(Key.backspace)
+                i += 1
+            else:
+                keyboard.press(phrase[i])
+                keyboard.release(phrase[i])
+            i += 1
     except ctypes.ArgumentError:
         # Workaround to get emojis to be handled correctly
         win32clipboard.OpenClipboard()

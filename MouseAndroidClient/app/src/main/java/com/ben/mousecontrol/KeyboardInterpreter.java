@@ -3,8 +3,10 @@ package com.ben.mousecontrol;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -13,8 +15,9 @@ import android.widget.EditText;
 
 class KeyboardInterpreter {
 
-    private static int ignoreArrowPress = 2;
+    private static boolean ignoreLeftPress = false;
     static boolean keyboardPinned = false;
+    static boolean startupDownIgnore = true;
 
     static void startKeyListener(AppCompatActivity context){
 
@@ -27,38 +30,41 @@ class KeyboardInterpreter {
         });
 
         TextWatcher hiddenTextWatcher = new TextWatcher() {
+            int previousTextLength = hiddenKeyBuffer.getText().toString().length()-2;
+
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 String text = hiddenKeyBuffer.getText().toString();
                 String value = "";
-                if (text.length() > 4) {
-                    value = text.substring(2, text.length() - 2);
-                }
+                if (previousTextLength + 2 <= text.length()) {
+                    value = text.substring(previousTextLength, text.length() - 2);
+                    value = value.replace("\t", "\\t");
+                    value = value.replace(" ", "\\s");
+                }else{
+                    for (int i = text.length(); i < previousTextLength + 2; i++){
+                        value += "\\b";
+                    }
 
-                if (value.equals("\t")) {
-                    value = "\\t";
+                    if (hiddenKeyBuffer.getText().toString().length() == 3){
+                        hiddenKeyBuffer.append("/");
+                        ignoreLeftPress = true;
+                    }
                 }
-
-                if (hiddenKeyBuffer.getSelectionStart() == 1 && text.length() == 3){
-                    value = "\\b";
-                }
-
-                if (value.equals(" ")){
-                    value = "\\s";
-                }
+                previousTextLength = hiddenKeyBuffer.getText().toString().length()-2;
 
                 if (!value.equals("")) {
                     SocketClient.addCommand("k " + value);
                 }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
             }
         };
 
@@ -85,55 +91,54 @@ class KeyboardInterpreter {
             return;
         }
 
-        if ((selStart == 1 && selEnd == 2) || selStart == 2 && selEnd == 1){
+        EditText hiddenKeyBuffer = activity.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
+        int sel = hiddenKeyBuffer.getText().toString().length()-2;
+
+        if ((selStart == sel - 1 && selEnd == sel) || selStart == sel && selEnd == sel - 1){
             SocketClient.addCommand("k \\hl"); //highlight left
         }
 
-        if ((selStart == 3 && selEnd == 2) || selStart == 2 && selEnd == 3){
+        if ((selStart == sel + 1 && selEnd == sel) || selStart == sel && selEnd == sel + 1){
             SocketClient.addCommand("k \\hr"); //hightlight right
         }
 
-        if ((selStart <= 1 && selEnd >= 3) || selStart >= 3 && selEnd <= 1){
+        if ((selStart == 0 && selEnd == sel + 2) || selStart == sel + 2 && selEnd == 0){
             SocketClient.addCommand("k \\ha"); //hightlight all
         }
 
-        if ((selStart == 0 && selEnd == 2) || (selStart == 2 && selEnd == 0)){
+        if ((selStart == 0 && selEnd == sel) || (selStart == sel && selEnd == 0)){
             SocketClient.addCommand("k \\hu"); //hightlight up
         }
 
-        if ((selStart == 4 && selEnd == 2) || (selStart == 2 && selEnd == 4)){
+        if ((selStart == sel + 2 && selEnd == sel) || (selStart == sel && selEnd == sel + 2)){
             SocketClient.addCommand("k \\hd"); //hightlight down
         }
 
-        EditText hiddenKeyBuffer = activity.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
-
-
-        if (ignoreArrowPress == 0) {
-            if (selStart == 1 && selEnd == 1 && hiddenKeyBuffer.getText().toString().length() == 4) {
+        if (selStart == sel - 1 && selEnd == sel - 1) {
+            if (!ignoreLeftPress) {
                 SocketClient.addCommand("k \\l"); //left
+            }else{
+                ignoreLeftPress = false;
             }
+        }
 
-            if (selStart == 3 && selEnd == 3 && hiddenKeyBuffer.getText().toString().length() == 4) {
-                SocketClient.addCommand("k \\r"); //right
-            }
+        if (selStart == sel + 1 && selEnd == sel + 1) {
+            SocketClient.addCommand("k \\r"); //right
+        }
 
-            if (selStart == 0 && selEnd == 0 && hiddenKeyBuffer.getText().toString().length() == 4) {
-                SocketClient.addCommand("k \\u"); //up
-            }
+        if (selStart == 0 && selEnd == 0) {
+            SocketClient.addCommand("k \\u"); //up
+        }
 
-            if (selStart == 4 && selEnd == 4 && hiddenKeyBuffer.getText().toString().length() == 4) {
+        if (selStart == sel + 2 && selEnd == sel + 2) {
+            if (!startupDownIgnore) {
                 SocketClient.addCommand("k \\d"); //down
+            }else{
+                startupDownIgnore = false;
             }
-        }else{
-            ignoreArrowPress--;
         }
 
-        if (!hiddenKeyBuffer.getText().toString().equals("////")){
-            ignoreArrowPress = 4;
-            hiddenKeyBuffer.setText("////");
-        }
-
-        hiddenKeyBuffer.setSelection(2, 2);
+        hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length() - 2);
     }
 
     static void toggleCustomKeyPressed(View view, boolean isPressed){

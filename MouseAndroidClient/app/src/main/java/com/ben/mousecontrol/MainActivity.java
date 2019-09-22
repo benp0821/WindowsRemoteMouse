@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -185,6 +186,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         endNetworkingTasks();
+
+        EditText hiddenKeyBuffer = findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.setText("////");
 
         super.onPause();
     }
