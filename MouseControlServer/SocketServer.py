@@ -48,6 +48,9 @@ def parse_command(data):
     elif data[0] == "hscroll":
         WindowsControl.hscroll_wheel(data[1])
         return "horizontal scroll;"
+    elif data[0] == "zoom":
+        WindowsControl.zoom(data[1])
+        return "zoom;"
     elif data[0] == "k":
         WindowsControl.keyboard_entry(data[1])
         return "keyboard: " + data[1] + ";"

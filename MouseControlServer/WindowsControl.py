@@ -34,6 +34,13 @@ def hscroll_wheel(scroll=-4):
     win32api.mouse_event(0x01000, x, y, int(scroll), 0)  # MOUSEEVENTF_HWHEEL
 
 
+def zoom(direction):
+    if direction == "out":
+        pyautogui.hotkey("ctrl", "-")
+    else:
+        pyautogui.hotkey("ctrl", "+")
+
+
 def keyboard_entry(phrase):
     keyboard = Controller()
 

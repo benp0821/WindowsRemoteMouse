@@ -8,13 +8,15 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class GestureInterpreter implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+public class GestureInterpreter extends ScaleGestureDetector.SimpleOnScaleGestureListener implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
 
     private static GestureDetector detector;
+    private static ScaleGestureDetector mScaleDetector;
     private static int startX, startY, startX2, startY2;
     private static float initX = 0;
     private static float initY = 0;
@@ -23,6 +25,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
     private static int multiTouch = 0;
     private static long touchStartTime = 0;
     private static boolean scroll = false;
+    private static boolean zoom = false;
     private static boolean buttonPressed = false;
     private static boolean singleTap = false;
     private static boolean multiTap = false;
@@ -48,6 +51,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
             return false;
         });
 
+        mScaleDetector = new ScaleGestureDetector(context, new GestureInterpreter());
         detector = new GestureDetector(context, new GestureInterpreter());
         @SuppressLint("ClickableViewAccessibility") View.OnTouchListener touchListener = (v, event) -> {
             int action = event.getActionMasked();
@@ -57,6 +61,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
                 CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
             }
 
+            mScaleDetector.onTouchEvent(event);
             detector.onTouchEvent(event);
 
             if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
@@ -77,6 +82,20 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
         };
 
         view.setOnTouchListener(touchListener);
+    }
+
+    @Override
+    public boolean onScale(ScaleGestureDetector detector) {
+        if (detector.getCurrentSpan() - detector.getPreviousSpan() > 10){
+            SocketClient.addCommand("zoom in");
+        }else if (detector.getCurrentSpan() - detector.getPreviousSpan() < -10){
+            SocketClient.addCommand("zoom out");
+        }
+
+        if (!scroll) {
+            zoom = true;
+        }
+        return true;
     }
 
     @Override
@@ -169,7 +188,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
 
     private static void onMouseUp(AppCompatActivity context, MotionEvent event) {
         int action = event.getActionMasked();
-        if (multiTouch == 2 && action == MotionEvent.ACTION_UP && System.currentTimeMillis() - touchStartTime < 600 && !scroll){
+        if (multiTouch == 2 && action == MotionEvent.ACTION_UP && System.currentTimeMillis() - touchStartTime < 600 && !scroll && !zoom){
             SocketClient.addCommand("mouseClick btn=right");
             multiTouch = 0;
             multiTap = true;
@@ -183,6 +202,7 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
         mouseMove = false;
         if (event.getPointerCount() < 2) {
             scroll = false;
+            zoom = false;
         }
 
         if (mouseDragging.equals("false")){
@@ -232,20 +252,21 @@ public class GestureInterpreter implements GestureDetector.OnGestureListener, Ge
             startX2 = (int)event.getX(1);
             startY2 = (int)event.getY(1);
 
-            if (difY > 5 && difY2 > 5) {
-                SocketClient.addCommand("vscroll 40");
-                scroll = true;
-            } else if (difY < -5 && difY2 < -5) {
-                SocketClient.addCommand("vscroll -40");
-                scroll = true;
-            } else if (difX > 15 && difX2 > 15){
-                SocketClient.addCommand("hscroll -40");
-                scroll = true;
-            }else if (difX < -15 && difX2 < -15){
-                SocketClient.addCommand("hscroll 40");
-                scroll = true;
+            if (!zoom) {
+                if (difY > 5 && difY2 > 5) {
+                    SocketClient.addCommand("vscroll 40");
+                    scroll = true;
+                } else if (difY < -5 && difY2 < -5) {
+                    SocketClient.addCommand("vscroll -40");
+                    scroll = true;
+                } else if (difX > 15 && difX2 > 15) {
+                    SocketClient.addCommand("hscroll -40");
+                    scroll = true;
+                } else if (difX < -15 && difX2 < -15) {
+                    SocketClient.addCommand("hscroll 40");
+                    scroll = true;
+                }
             }
-
         }
     }
 
