@@ -1,107 +1,121 @@
-import pyautogui
-import win32api
-import win32gui
-import ctypes
+from ctypes import windll, byref, ArgumentError
+from ctypes.wintypes import POINT
+from time import sleep
+
 import win32clipboard
+from pynput.keyboard import Controller
 from win32con import *
-from pynput.keyboard import Key, Controller
+
+
+def key_press(keys):
+    for key in keys:
+        windll.user32.keybd_event(key, 0, KEYEVENTF_EXTENDEDKEY, 0)
+
+    for key in reversed(keys):
+        windll.user32.keybd_event(key, 0, (KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP), 0)
 
 
 def click(amount=1, btn='left'):
-    pyautogui.click(clicks=amount, button=btn)
+    for i in range(0, int(amount)):
+        drag_start(btn=btn)
+        drag_end(btn=btn)
 
 
 def move_rel(x, y):
-    (c_x, c_y) = win32gui.GetCursorPos()
-    ctypes.windll.user32.SetCursorPos(c_x + int(x), c_y + int(y))
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    windll.user32.SetCursorPos(pt.x + int(x), pt.y + int(y))
 
 
 def drag_start(btn='left'):
-    pyautogui.mouseDown(button=btn)
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    if btn == 'left':
+        windll.user32.mouse_event(MOUSEEVENTF_LEFTDOWN, pt.x, pt.y, 0, 0)
+    elif btn == 'right':
+        windll.user32.mouse_event(MOUSEEVENTF_RIGHTDOWN, pt.x, pt.y, 0, 0)
+    elif btn == 'middle':
+        windll.user32.mouse_event(MOUSEEVENTF_MIDDLEDOWN, pt.x, pt.y, 0, 0)
 
 
 def drag_end(btn='left'):
-    pyautogui.mouseUp(button=btn)
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    if btn == 'left':
+        windll.user32.mouse_event(MOUSEEVENTF_LEFTUP, pt.x, pt.y, 0, 0)
+    elif btn == 'right':
+        windll.user32.mouse_event(MOUSEEVENTF_RIGHTUP, pt.x, pt.y, 0, 0)
+    elif btn == 'middle':
+        windll.user32.mouse_event(MOUSEEVENTF_MIDDLEUP, pt.x, pt.y, 0, 0)
 
 
 def vscroll_wheel(scroll=-4):
-    x, y = win32api.GetCursorPos();
-    win32api.mouse_event(MOUSEEVENTF_WHEEL, x, y, int(scroll), 0)
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    windll.user32.mouse_event(MOUSEEVENTF_WHEEL, pt.x, pt.y, int(scroll), 0)
 
 
 def hscroll_wheel(scroll=-4):
-    x, y = win32api.GetCursorPos();
-    win32api.mouse_event(0x01000, x, y, int(scroll), 0)  # MOUSEEVENTF_HWHEEL
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    windll.user32.mouse_event(0x01000, pt.x, pt.y, int(scroll), 0)  # MOUSEEVENTF_HWHEEL
 
 
 def zoom(direction):
     if direction == "out":
-        pyautogui.hotkey("ctrl", "-")
+        key_press([VK_CONTROL, 0xBD])  # MINUS
     else:
-        pyautogui.hotkey("ctrl", "+")
+        key_press([VK_CONTROL, 0xBB])  # PLUS
 
 
 def keyboard_entry(phrase):
     keyboard = Controller()
 
-    phrase = phrase.replace("\\t", "\t");
-    phrase = phrase.replace("\\s", " ");
+    phrase = phrase.replace("\\t", "\t")
+    phrase = phrase.replace("\\s", " ")
 
     if phrase == "\\n":
-        keyboard.press(Key.enter)
+        key_press([VK_RETURN])
         return
     elif phrase == "\\l":
-        keyboard.press(Key.left)
+        key_press([VK_LEFT])
         return
     elif phrase == "\\r":
-        keyboard.press(Key.right)
+        key_press([VK_RIGHT])
         return
     elif phrase == "\\u":
-        keyboard.press(Key.up)
+        key_press([VK_UP])
         return
     elif phrase == "\\d":
-        keyboard.press(Key.down)
+        key_press([VK_DOWN])
         return
-    # pyautogui can't handle shift + arrow combinations, as it requires the KEYEVENTF_EXTENDEDKEY flag
     elif phrase == "\\hl":
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
-        ctypes.windll.user32.keybd_event(VK_LEFT, 0, 1, 0)
-        ctypes.windll.user32.keybd_event(VK_LEFT, 0, (1 | 2), 0)
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        key_press([VK_SHIFT, VK_LEFT])
         return
     elif phrase == "\\hr":
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
-        ctypes.windll.user32.keybd_event(VK_RIGHT, 0, 1, 0)
-        ctypes.windll.user32.keybd_event(VK_RIGHT, 0, (1 | 2), 0)
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        key_press([VK_SHIFT, VK_RIGHT])
         return
     elif phrase == "\\hu":
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
-        ctypes.windll.user32.keybd_event(VK_UP, 0, 1, 0)
-        ctypes.windll.user32.keybd_event(VK_UP, 0, (1 | 2), 0)
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        key_press([VK_SHIFT, VK_UP])
         return
     elif phrase == "\\hd":
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 0, 0)
-        ctypes.windll.user32.keybd_event(VK_DOWN, 0, 1, 0)
-        ctypes.windll.user32.keybd_event(VK_DOWN, 0, (1 | 2), 0)
-        ctypes.windll.user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        key_press([VK_SHIFT, VK_DOWN])
         return
     elif phrase == "\\ha":
-        pyautogui.hotkey("ctrl", "a")
+        key_press([VK_CONTROL, 0x41])  # A
         return
 
     try:
         i = 0
         while i < len(phrase):
             if i < len(phrase) - 1 and phrase[i] == "\\" and phrase[i+1] == "b":
-                keyboard.press(Key.backspace)
+                key_press([VK_BACK])
                 i += 1
             else:
                 keyboard.press(phrase[i])
                 keyboard.release(phrase[i])
             i += 1
-    except ctypes.ArgumentError:
+    except ArgumentError:
         # Workaround to get emojis to be handled correctly
         win32clipboard.OpenClipboard()
         data = win32clipboard.GetClipboardData()
@@ -109,7 +123,8 @@ def keyboard_entry(phrase):
         win32clipboard.SetClipboardData(CF_UNICODETEXT, phrase)
         win32clipboard.CloseClipboard()
 
-        pyautogui.hotkey("ctrl", "v")
+        key_press([VK_CONTROL, 0x56])  # V
+        sleep(1)
 
         win32clipboard.OpenClipboard()
         win32clipboard.EmptyClipboard()

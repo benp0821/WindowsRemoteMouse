@@ -52,6 +52,7 @@ public class GestureInterpreter extends ScaleGestureDetector.SimpleOnScaleGestur
         });
 
         mScaleDetector = new ScaleGestureDetector(context, new GestureInterpreter());
+        mScaleDetector.setQuickScaleEnabled(false);
         detector = new GestureDetector(context, new GestureInterpreter());
         @SuppressLint("ClickableViewAccessibility") View.OnTouchListener touchListener = (v, event) -> {
             int action = event.getActionMasked();
@@ -111,9 +112,10 @@ public class GestureInterpreter extends ScaleGestureDetector.SimpleOnScaleGestur
         if (!mouseDragging.equals("false")) {
             SocketClient.addCommand("mouseDragEnd " + mouseDragging);
             mouseDragging = "false";
+        }else {
+            SocketClient.addCommand("mouseClick");
+            singleTap = true;
         }
-        SocketClient.addCommand("mouseClick");
-        singleTap = true;
         return true;
     }
 
