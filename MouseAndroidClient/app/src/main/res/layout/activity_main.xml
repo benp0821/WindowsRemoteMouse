@@ -49,8 +49,7 @@
                 android:text="@string/initialHiddenBufferText"
                 android:hint=""
                 android:inputType="textNoSuggestions"
-                tools:text="@string/initialHiddenBufferText"
-                android:privateImeOptions="nm"/>
+                tools:text="@string/initialHiddenBufferText"/>
 
             <android.widget.GridLayout
                 android:layout_width="wrap_content"

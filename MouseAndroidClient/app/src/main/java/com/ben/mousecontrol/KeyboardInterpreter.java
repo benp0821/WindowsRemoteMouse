@@ -15,7 +15,7 @@ import android.widget.EditText;
 
 class KeyboardInterpreter {
 
-    private static boolean ignoreLeftPress = false;
+    private static boolean ignoreLeftOrUpPress = false;
     static boolean keyboardPinned = false;
     static boolean startupDownIgnore = true;
 
@@ -30,7 +30,7 @@ class KeyboardInterpreter {
         });
 
         TextWatcher hiddenTextWatcher = new TextWatcher() {
-            int previousTextLength = hiddenKeyBuffer.getText().toString().length()-2;
+            String previousText = hiddenKeyBuffer.getText().toString();
 
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -40,22 +40,50 @@ class KeyboardInterpreter {
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 String text = hiddenKeyBuffer.getText().toString();
+
+                boolean diff = false;
+                int diffStartIndex = previousText.codePointCount(0, previousText.length()) - 2;
                 String value = "";
-                if (previousTextLength + 2 <= text.length()) {
-                    value = text.substring(previousTextLength, text.length() - 2);
-                    value = value.replace("\t", "\\t");
-                    value = value.replace(" ", "\\s");
-                }else{
-                    for (int i = text.length(); i < previousTextLength + 2; i++){
+
+                if (hiddenKeyBuffer.getText().toString().equals("//")) {
+                    hiddenKeyBuffer.append("/");
+                    value += "\\b";
+                    ignoreLeftOrUpPress = true;
+                }
+
+                if (hiddenKeyBuffer.getText().toString().equals("///")) {
+                    hiddenKeyBuffer.append("/");
+                    value += "\\b";
+                    ignoreLeftOrUpPress = true;
+                }
+
+                for (int i = 2; i < previousText.codePointCount(0, previousText.length()) - 2; i++) {
+                    if (i < text.codePointCount(0, text.length()) - 2) {
+                        if (diff) {
+                            value += "\\b";
+                        }
+
+                        if (!diff && previousText.codePointAt(i) != (text.codePointAt(i))) {
+                            diff = true;
+                            diffStartIndex = i;
+                        }
+                    } else {
                         value += "\\b";
                     }
+                }
 
-                    if (hiddenKeyBuffer.getText().toString().length() == 3){
-                        hiddenKeyBuffer.append("/");
-                        ignoreLeftPress = true;
+                for (int i = diffStartIndex; i < text.codePointCount(0, text.length()) - 2; i++) {
+                    char[] chars = Character.toChars(text.codePointAt(i));
+                    for (int j = 0; j < chars.length; j++) {
+                        value += chars[j];
                     }
                 }
-                previousTextLength = hiddenKeyBuffer.getText().toString().length()-2;
+
+                value = value.replace("\t", "\\t");
+                value = value.replace(" ", "\\s");
+
+
+                previousText = hiddenKeyBuffer.getText().toString();
 
                 if (!value.equals("")) {
                     SocketClient.addCommand("k " + value);
@@ -115,10 +143,10 @@ class KeyboardInterpreter {
         }
 
         if (selStart == sel - 1 && selEnd == sel - 1) {
-            if (!ignoreLeftPress) {
+            if (!ignoreLeftOrUpPress) {
                 SocketClient.addCommand("k \\l"); //left
             }else{
-                ignoreLeftPress = false;
+                ignoreLeftOrUpPress = false;
             }
         }
 
@@ -127,7 +155,11 @@ class KeyboardInterpreter {
         }
 
         if (selStart == 0 && selEnd == 0) {
-            SocketClient.addCommand("k \\u"); //up
+            if (!ignoreLeftOrUpPress) {
+                SocketClient.addCommand("k \\u"); //up
+            }else{
+                ignoreLeftOrUpPress = false;
+            }
         }
 
         if (selStart == sel + 2 && selEnd == sel + 2) {
