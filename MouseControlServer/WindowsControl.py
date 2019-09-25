@@ -124,7 +124,7 @@ def keyboard_entry(phrase):
         win32clipboard.CloseClipboard()
 
         key_press([VK_CONTROL, 0x56])  # V
-        sleep(1)
+        sleep(0.1)
 
         win32clipboard.OpenClipboard()
         win32clipboard.EmptyClipboard()
