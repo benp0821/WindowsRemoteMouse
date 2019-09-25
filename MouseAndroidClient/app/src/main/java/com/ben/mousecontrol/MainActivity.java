@@ -154,7 +154,11 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
+        KeyboardInterpreter.startupUpIgnore = true;
+        KeyboardInterpreter.startUpBackspaceIgnore = true;
+
         EditText hiddenKeyBuffer = findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
+        hiddenKeyBuffer.setText("////");
         CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
@@ -186,9 +190,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         endNetworkingTasks();
-
-        EditText hiddenKeyBuffer = findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
-        hiddenKeyBuffer.setText("////");
 
         super.onPause();
     }

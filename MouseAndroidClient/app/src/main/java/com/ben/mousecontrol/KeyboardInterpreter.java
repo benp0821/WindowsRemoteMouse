@@ -18,6 +18,8 @@ class KeyboardInterpreter {
     private static boolean ignoreLeftOrUpPress = false;
     static boolean keyboardPinned = false;
     static boolean startupDownIgnore = true;
+    static boolean startupUpIgnore = true;
+    static boolean startUpBackspaceIgnore = true;
 
     static void startKeyListener(AppCompatActivity context){
 
@@ -42,7 +44,7 @@ class KeyboardInterpreter {
                 String text = hiddenKeyBuffer.getText().toString();
 
                 boolean diff = false;
-                int diffStartIndex = previousText.codePointCount(0, previousText.length()) - 2;
+                int diffStartIndex = previousText.length() - 2;
                 String value = "";
 
                 if (hiddenKeyBuffer.getText().toString().equals("//")) {
@@ -57,33 +59,47 @@ class KeyboardInterpreter {
                     ignoreLeftOrUpPress = true;
                 }
 
-                for (int i = 2; i < previousText.codePointCount(0, previousText.length()) - 2; i++) {
-                    if (i < text.codePointCount(0, text.length()) - 2) {
-                        if (diff) {
-                            value += "\\b";
-                        }
-
+                for (int i = 2; i < previousText.length() - 2; ) {
+                    if (i < text.length() - 2) {
                         if (!diff && previousText.codePointAt(i) != (text.codePointAt(i))) {
                             diff = true;
                             diffStartIndex = i;
                         }
+
+                        if (diff) {
+                            value += "\\b";
+                        }
                     } else {
                         value += "\\b";
                     }
+
+                    int codePoint = previousText.codePointAt(i);
+                    i += Character.charCount(codePoint);
                 }
 
-                for (int i = diffStartIndex; i < text.codePointCount(0, text.length()) - 2; i++) {
-                    char[] chars = Character.toChars(text.codePointAt(i));
-                    for (int j = 0; j < chars.length; j++) {
-                        value += chars[j];
+                for (int i = diffStartIndex; i < text.length() - 2; ) {
+                    int codePoint = text.codePointAt(i);
+                    if (Character.isBmpCodePoint(codePoint)) {
+                        value += (char) codePoint;
+                    } else if (Character.isValidCodePoint(codePoint)) {
+                        value += Character.highSurrogate(codePoint);
+                        value += Character.lowSurrogate(codePoint);
+                    } else {
+                        value += '?';
                     }
+
+                    i += Character.charCount(codePoint);
                 }
 
                 value = value.replace("\t", "\\t");
                 value = value.replace(" ", "\\s");
 
-
                 previousText = hiddenKeyBuffer.getText().toString();
+
+                if (startUpBackspaceIgnore){
+                    value = "";
+                    startUpBackspaceIgnore = false;
+                }
 
                 if (!value.equals("")) {
                     SocketClient.addCommand("k " + value);
@@ -155,10 +171,14 @@ class KeyboardInterpreter {
         }
 
         if (selStart == 0 && selEnd == 0) {
-            if (!ignoreLeftOrUpPress) {
-                SocketClient.addCommand("k \\u"); //up
+            if (!startupUpIgnore) {
+                if (!ignoreLeftOrUpPress) {
+                    SocketClient.addCommand("k \\u"); //up
+                } else {
+                    ignoreLeftOrUpPress = false;
+                }
             }else{
-                ignoreLeftOrUpPress = false;
+                startupUpIgnore = false;
             }
         }
 
