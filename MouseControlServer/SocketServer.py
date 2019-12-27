@@ -1,8 +1,13 @@
 import socket
 import sys
 import threading
+import base64
+
+import win32gui
+
 import WindowsControl
 from tendo import singleton
+from desktopmagic.screengrab_win32 import getRectAsImage
 
 try:
     me = singleton.SingleInstance()
@@ -16,7 +21,15 @@ PORT = 8888
 
 def parse_command(data):
     if data[0] == "ping":
-        return "still connected;"
+        _, _, (x, y) = win32gui.GetCursorInfo()
+        image = getRectAsImage((x - 200, y - 300, x + 200, y + 300))
+        image.save('im.png', format='png')
+
+        val = ""
+        with open("im.png", "rb") as imageFile:
+            val += str(base64.b64encode(imageFile.read()))
+
+        return val + ";"
     elif data[0] == "mouseClick":
         amount = 1
         btn = 'left'

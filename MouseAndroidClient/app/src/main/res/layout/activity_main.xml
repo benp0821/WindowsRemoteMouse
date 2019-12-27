@@ -243,4 +243,13 @@
             android:layout_gravity="bottom"
             android:text="@string/pin"/>
     </android.widget.LinearLayout>
+
+    <ImageView
+        android:id="@+id/myimg"
+        android:layout_width="15dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:background="@drawable/cursor"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="7.5dp"/>
 </merge>

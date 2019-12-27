@@ -164,6 +164,7 @@ public class GestureInterpreter extends ScaleGestureDetector.SimpleOnScaleGestur
         if (mouseDragging.equals("false")) {
             SocketClient.addCommand("mouseDrag " + button);
             mouseDragging = button;
+            System.out.println("drag start " + button);
         }
     }
 

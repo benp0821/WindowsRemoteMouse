@@ -2,6 +2,11 @@ package com.ben.mousecontrol;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -11,8 +16,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
+import android.util.Base64;
 
 public class SocketClient implements Runnable{
 
@@ -22,9 +30,9 @@ public class SocketClient implements Runnable{
     private Activity context;
     private Timer timer;
     private TimerTask pingTask;
-    private static String command;
     private boolean ping = false;
     private static Toast m_currentToast;
+    private static Queue<String> commands = new LinkedList<>();
 
 
     SocketClient(Activity context, String host, int port) {
@@ -45,7 +53,7 @@ public class SocketClient implements Runnable{
                     ping = true;
                 }
             };
-            timer.schedule(pingTask, 1000, 5000);
+            timer.schedule(pingTask, 100, 5);
 
             try {
                 s = new Socket();
@@ -57,15 +65,16 @@ public class SocketClient implements Runnable{
 
                 int inputChar = 0;
                 boolean waitForInput = false;
+                boolean isPing = false;
                 while (s.isConnected() && !s.isClosed() && inputChar != -1) {
-                    if (!command.isEmpty()) {
-                        outputStream.write(command.getBytes(StandardCharsets.UTF_8));
-                        command = "";
+                    if (!commands.isEmpty()) {
+                        outputStream.write(commands.poll().getBytes(StandardCharsets.UTF_8));
                         waitForInput = true;
                     }else if (ping){
                         outputStream.write("ping".getBytes(StandardCharsets.UTF_8));
-                        ping = false;
                         waitForInput = true;
+                        isPing = true;
+                        ping = false;
                     }
 
                     if (waitForInput) {
@@ -74,7 +83,29 @@ public class SocketClient implements Runnable{
                             inputString.append((char) inputChar);
                         }
                         if (inputChar != -1) {
-                            System.out.println(inputString);
+                            if (isPing){
+                                try {
+                                    byte[] data = Base64.decode(inputString.toString().substring(2), Base64.DEFAULT);
+
+                                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                    LinearLayout layout = context.findViewById(R.id.layout);
+                                    BitmapDrawable bmpDraw = new BitmapDrawable(context.getResources(), bmp);
+                                    context.runOnUiThread(() -> {
+                                        try {
+                                            layout.setBackground(bmpDraw);
+                                        } catch (NullPointerException e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+                                }catch(IllegalArgumentException iae){
+                                    iae.printStackTrace();
+                                }
+                                isPing = false;
+                            }
+                            else
+                            {
+                                System.out.println(inputString);
+                            }
                         }
                         waitForInput = false;
                     }
@@ -111,13 +142,14 @@ public class SocketClient implements Runnable{
     }
 
     static void addCommand(String command){
-        SocketClient.command = command;
+        commands.add(command);
+        System.out.println("added command " + command);
     }
 
     void endNetworkingTasks(){
         pingTask.cancel();
         timer.cancel();
-        command = "";
+        commands.clear();
         ping = false;
 
         try {
