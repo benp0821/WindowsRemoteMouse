@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a54a6a37-71c1-48b8-8ba5-d204ae1cb604" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/MainActivity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/SocketClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/SocketClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/mouse_icon-web.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/layout/activity_main.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/MouseControlServer.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MouseControlServer.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/menu/menu.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/menu/menu.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/SocketServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/SocketServer.py" afterDir="false" />
     </list>

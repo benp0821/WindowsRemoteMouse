@@ -25,6 +25,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     Handler scanTextHandler;
     Runnable scanTextRunnable;
     int scanCounter;
+    boolean previewImage;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +63,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+        previewImage = pref.getBoolean("previewImage", true);
+        MenuItem previewImageBtn = menu.findItem(R.id.show_image);
+        previewImageBtn.setChecked(previewImage);
+
+        ImageView cursor = findViewById(R.id.cursor);
+
+        if (previewImageBtn.isChecked()){
+            cursor.setVisibility(ImageView.VISIBLE);
+        }else{
+            cursor.setVisibility(ImageView.INVISIBLE);
+        }
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -143,7 +159,24 @@ public class MainActivity extends AppCompatActivity {
                     }
                     return false;
                 });
+            case R.id.show_image:
+                item.setChecked(!item.isChecked());
 
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putBoolean("previewImage", item.isChecked());
+                previewImage = item.isChecked();
+
+                ImageView cursor = findViewById(R.id.cursor);
+
+                if (item.isChecked()){
+                    cursor.setVisibility(ImageView.VISIBLE);
+                }else{
+                    cursor.setVisibility(ImageView.INVISIBLE);
+                }
+
+                editor.apply();
+                break;
             default:
                 break;
         }
@@ -162,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+
         ip = pref.getString("ipAddr", "");
 
         if (ip.equals("")) {
@@ -297,7 +331,11 @@ public class MainActivity extends AppCompatActivity {
                     ipAddr = prefix + String.valueOf(scanCounter);
                     s = new Socket();
                     s.connect(new InetSocketAddress(ipAddr, 8888), 5000);
-                    scanTextHandler.removeCallbacks(scanTextRunnable);
+                    try {
+                        scanTextHandler.removeCallbacks(scanTextRunnable);
+                    }catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
                     return ipAddr;
                 } catch (IOException e) {
                     e.printStackTrace();

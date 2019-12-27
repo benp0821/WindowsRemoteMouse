@@ -9,4 +9,10 @@
         android:id="@+id/manual"
         android:title="Enter Manual IP"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/show_image"
+        android:title="Show Preview Image"
+        app:showAsAction="never"
+        android:checkable="true"
+        android:checked="true"/>
 </menu>

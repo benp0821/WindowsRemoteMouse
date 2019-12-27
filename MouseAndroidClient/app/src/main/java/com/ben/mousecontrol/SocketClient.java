@@ -5,7 +5,8 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.widget.ImageView;
+import android.util.Base64;
+import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -20,7 +21,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
-import android.util.Base64;
 
 public class SocketClient implements Runnable{
 
@@ -71,7 +71,7 @@ public class SocketClient implements Runnable{
                         outputStream.write(commands.poll().getBytes(StandardCharsets.UTF_8));
                         waitForInput = true;
                     }else if (ping){
-                        outputStream.write("ping".getBytes(StandardCharsets.UTF_8));
+                        outputStream.write(("ping " + ((MainActivity)context).previewImage).getBytes(StandardCharsets.UTF_8));
                         waitForInput = true;
                         isPing = true;
                         ping = false;
@@ -84,21 +84,26 @@ public class SocketClient implements Runnable{
                         }
                         if (inputChar != -1) {
                             if (isPing){
-                                try {
-                                    byte[] data = Base64.decode(inputString.toString().substring(2), Base64.DEFAULT);
+                                if (((MainActivity)context).previewImage){
+                                    try {
+                                        byte[] data = Base64.decode(inputString.toString().substring(2), Base64.DEFAULT);
 
-                                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                        Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                        LinearLayout layout = context.findViewById(R.id.layout);
+                                        BitmapDrawable bmpDraw = new BitmapDrawable(context.getResources(), bmp);
+                                        context.runOnUiThread(() -> {
+                                            try {
+                                                layout.setBackground(bmpDraw);
+                                            } catch (NullPointerException e) {
+                                                e.printStackTrace();
+                                            }
+                                        });
+                                    } catch (IllegalArgumentException iae) {
+                                        iae.printStackTrace();
+                                    }
+                                }else{
                                     LinearLayout layout = context.findViewById(R.id.layout);
-                                    BitmapDrawable bmpDraw = new BitmapDrawable(context.getResources(), bmp);
-                                    context.runOnUiThread(() -> {
-                                        try {
-                                            layout.setBackground(bmpDraw);
-                                        } catch (NullPointerException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
-                                }catch(IllegalArgumentException iae){
-                                    iae.printStackTrace();
+                                    layout.setBackground(null);
                                 }
                                 isPing = false;
                             }
@@ -147,6 +152,9 @@ public class SocketClient implements Runnable{
     }
 
     void endNetworkingTasks(){
+        LinearLayout layout = context.findViewById(R.id.layout);
+        layout.setBackground(null);
+
         pingTask.cancel();
         timer.cancel();
         commands.clear();
