@@ -83,7 +83,7 @@ public class SocketClient implements Runnable{
                             inputString.append((char) inputChar);
                         }
                         if (inputChar != -1) {
-                            if (isPing){
+                            if (isPing && inputString.length() > 0){
                                 if (((MainActivity)context).previewImage){
                                     try {
                                         byte[] data = Base64.decode(inputString.toString().substring(2), Base64.DEFAULT);
@@ -152,8 +152,14 @@ public class SocketClient implements Runnable{
     }
 
     void endNetworkingTasks(){
-        LinearLayout layout = context.findViewById(R.id.layout);
-        layout.setBackground(null);
+        context.runOnUiThread(() -> {
+            try {
+                LinearLayout layout = context.findViewById(R.id.layout);
+                layout.setBackground(null);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        });
 
         pingTask.cancel();
         timer.cancel();

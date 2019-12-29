@@ -24,11 +24,16 @@ def parse_command(data):
         if data[1] == "true":
             _, _, (x, y) = win32gui.GetCursorInfo()
             image = getRectAsImage((x - 200, y - 300, x + 200, y + 300))
-            image.save('im.png', format='png')
 
             val = ""
-            with open("im.png", "rb") as imageFile:
-                val += str(base64.b64encode(imageFile.read()))
+
+            try:
+                image.save('im.png', format='png')
+
+                with open("im.png", "rb") as imageFile:
+                    val += str(base64.b64encode(imageFile.read()))
+            except OSError:
+                print("failed to create image")
 
             return val + ";"
         else:
@@ -92,6 +97,9 @@ def client_thread(conn):
             break
         except ConnectionAbortedError:
             print("Connection Aborted")
+            break
+        except ConnectionResetError:
+            print("Connection Reset")
             break
         except UnicodeDecodeError:
             print("Error Decoding Unicode, Connection Aborted")
