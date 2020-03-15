@@ -27,18 +27,34 @@
             android:background="?attr/colorPrimaryDark">
         </android.support.v7.widget.Toolbar>
 
-        <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
+        <android.widget.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center">
 
-            <View
+            <android.widget.LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:orientation="vertical"
                 android:layout_weight=".1"
-                android:layout_gravity="fill"/>
+                android:layout_gravity="fill">
+
+                <TextView
+                    android:id="@+id/comboTextBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="ASDFGJKL"
+                    android:background="#FFFFFFFF"
+                    android:visibility="invisible"
+                    android:textSize="40sp"/>
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="fill"/>
+
+            </android.widget.LinearLayout>
 
             <com.ben.mousecontrol.HiddenBufferEditText
                 android:id="@+id/hiddenKeyBuffer"
@@ -200,48 +216,85 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/ctrlBtn"
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/ctrl" />
-
-        <Button
-            android:id="@+id/altBtn"
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/alt" />
-
-        <Button
-            android:id="@+id/shiftBtn"
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/shift" />
-
-        <Button
-            android:id="@+id/winBtn"
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/windows" />
-
-        <View
+        <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_weight=".1"
-            android:layout_gravity="bottom"/>
-
-        <Button
-            android:id="@+id/pinBtn"
-            android:layout_width="50dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="@string/pin"/>
+            android:layout_gravity="bottom">
+
+            <Button
+                android:id="@+id/comboBtn"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="combo" />
+
+        </android.widget.LinearLayout>
+
+        <android.widget.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom">
+
+            <Button
+                android:id="@+id/ctrlBtn"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/ctrl" />
+
+            <Button
+                android:id="@+id/altBtn"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/alt" />
+
+            <Button
+                android:id="@+id/shiftBtn"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/shift" />
+
+            <Button
+                android:id="@+id/winBtn"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/windows" />
+
+            <Button
+                android:id="@+id/cpyBtn"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/copy" />
+
+            <Button
+                android:id="@+id/pasteBtn"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/paste" />
+
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight=".1"
+                android:layout_gravity="center_vertical"/>
+
+            <Button
+                android:id="@+id/pinBtn"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/pin"/>
+        </android.widget.LinearLayout>
     </android.widget.LinearLayout>
 
     <ImageView

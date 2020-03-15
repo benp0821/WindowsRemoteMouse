@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -16,7 +17,6 @@ import android.widget.EditText;
 class KeyboardInterpreter {
 
     private static boolean ignoreLeftOrUpPress = false;
-    static boolean keyboardPinned = false;
     static boolean startupDownIgnore = true;
     static boolean startupUpIgnore = true;
     static boolean startUpBackspaceIgnore = true;
@@ -120,14 +120,6 @@ class KeyboardInterpreter {
             }
             return true;
         });
-
-
-        Button pinBtn = context.findViewById(R.id.pinBtn);
-        pinBtn.setOnClickListener(view -> {
-            keyboardPinned = !keyboardPinned;
-
-            toggleCustomKeyPressed(view, keyboardPinned);
-        });
     }
 
     static void selectionChanged(AppCompatActivity activity, int selStart, int selEnd){
@@ -191,14 +183,6 @@ class KeyboardInterpreter {
         }
 
         hiddenKeyBuffer.setSelection(hiddenKeyBuffer.getText().length() - 2);
-    }
-
-    static void toggleCustomKeyPressed(View view, boolean isPressed){
-        if (isPressed){
-                view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC));
-        }else{
-            view.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
-        }
     }
 
 }

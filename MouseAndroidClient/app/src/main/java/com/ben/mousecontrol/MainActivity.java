@@ -43,10 +43,9 @@ public class MainActivity extends AppCompatActivity {
     Thread thread;
     Thread findThread;
     volatile String ip;
-    Handler scanTextHandler;
-    Runnable scanTextRunnable;
     int scanCounter;
     boolean previewImage;
+    AlertDialog scanAlertDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,12 +103,57 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void enterManualIP(){
+        EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
+        CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
+        CustomKeyboard.keyboardPinned = false;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter IP: ");
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.manual_ip_popup, findViewById(R.id.layout), false);
+        final EditText input = viewInflated.findViewById(R.id.input);
+        input.setText(ip);
+        input.setSelection(ip.length());
+        builder.setView(viewInflated);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+            InputMethodManager inputManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputManager != null) {
+                inputManager.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+
+            dialog.cancel();
+        });
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+
+        dialog.setOnShowListener(dialog1 -> {
+            Button b = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
+            b.setOnClickListener(view -> {
+                manualIPEntered(input, dialog);
+            });
+        });
+
+        if (dialog.getWindow() != null){
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+        dialog.show();
+
+        input.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                manualIPEntered(input, dialog);
+            }
+            return false;
+        });
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.scan:
                 if (findThread == null || !findThread.isAlive()) {
                     endNetworkingTasks();
+                    scanCounter = 0;
                     FindIP finderClass = new FindIP(this);
                     findThread = new Thread(finderClass);
                     findThread.start();
@@ -118,47 +162,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.manual:
-                EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
-                CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
-                KeyboardInterpreter.keyboardPinned = false;
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Enter IP: ");
-                View viewInflated = LayoutInflater.from(this).inflate(R.layout.manual_ip_popup, findViewById(R.id.layout), false);
-                final EditText input = viewInflated.findViewById(R.id.input);
-                input.setText(ip);
-                input.setSelection(ip.length());
-                builder.setView(viewInflated);
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-                    InputMethodManager inputManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (inputManager != null) {
-                        inputManager.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                    }
-
-                    dialog.cancel();
-                });
-                AlertDialog dialog = builder.create();
-                dialog.setCanceledOnTouchOutside(false);
-
-                dialog.setOnShowListener(dialog1 -> {
-                    Button b = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
-                    b.setOnClickListener(view -> {
-                        manualIPEntered(input, dialog);
-                    });
-                });
-
-                if (dialog.getWindow() != null){
-                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-                }
-                dialog.show();
-
-                input.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        manualIPEntered(input, dialog);
-                    }
-                    return false;
-                });
+                enterManualIP();
             case R.id.show_image:
                 item.setChecked(!item.isChecked());
 
@@ -194,6 +198,10 @@ public class MainActivity extends AppCompatActivity {
         hiddenKeyBuffer.setText("////");
         CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
 
+        if (scanAlertDialog != null) {
+            scanAlertDialog.dismiss();
+        }
+
         SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
 
         ip = pref.getString("ipAddr", "");
@@ -209,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             thread.start();
         }
 
-        if (KeyboardInterpreter.keyboardPinned){
+        if (CustomKeyboard.keyboardPinned){
 
             hiddenKeyBuffer.requestFocus();
             //delays so that keyboard will be able to reappear. If timeout is not long enough, visiblity is reverted back to false
@@ -217,7 +225,16 @@ public class MainActivity extends AppCompatActivity {
             hiddenKeyBuffer.postDelayed(() -> CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, true), 100);
 
             Button pinBtn = findViewById(R.id.pinBtn);
-            KeyboardInterpreter.toggleCustomKeyPressed(pinBtn, true);
+            CustomKeyboard.toggleCustomKeyPressed(pinBtn, true);
+
+            if (CustomKeyboard.keyCombo){
+                Button comboBtn = findViewById(R.id.comboBtn);
+                CustomKeyboard.toggleCustomKeyPressed(comboBtn, true);
+            }
+        }else{
+            CustomKeyboard.keyCombo = false;
+            TextView comboTextBox = findViewById(R.id.comboTextBox);
+            comboTextBox.setVisibility(CustomKeyboard.keyCombo ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
@@ -258,11 +275,6 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-        try {
-            scanTextHandler.removeCallbacks(scanTextRunnable);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     public void abcPressed(View view) {
@@ -280,48 +292,55 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String findIpAddress() {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-            WifiInfo connectionInfo;
-            if (wm != null) {
-                connectionInfo = wm.getConnectionInfo();
-
-                int ipAddress = connectionInfo.getIpAddress();
-
-                if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
-                    ipAddress = Integer.reverseBytes(ipAddress);
+            AlertDialog.Builder scanAlert  = new AlertDialog.Builder(context);
+            scanAlert.setTitle("Scanning");
+            scanAlert.setPositiveButton("Connect Manually", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    enterManualIP();
+                    scanCounter = 256;
                 }
+            });
 
-                byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+            scanAlert.setNegativeButton("Try Again", null); //listener added below, as the button should not close the dialog.
+            scanAlert.setCancelable(false);
 
-                try {
-                    ipAddr = InetAddress.getByAddress(ipByteArray).getHostAddress();
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                }
-            }
-            String prefix;
-            if (ipAddr != null) {
-                prefix = ipAddr.substring(0, ipAddr.lastIndexOf(".") + 1);
-            } else {
-                prefix = "192.168.0.";
-            }
-
-            runOnUiThread(() -> scanTextHandler = new Handler());
-
-            scanTextRunnable = new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(context, "Scanning...", Toast.LENGTH_LONG).show();
-                    if (ip != null && ip.equals("") && findThread.isAlive()) {
-                        scanTextHandler.postDelayed(this, 1000);
+                    scanAlertDialog = scanAlert.create();
+                }
+            });
+
+            while (scanCounter < 255) {
+
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+                WifiInfo connectionInfo;
+                if (wm != null) {
+                    connectionInfo = wm.getConnectionInfo();
+
+                    int ipAddress = connectionInfo.getIpAddress();
+
+                    if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                        ipAddress = Integer.reverseBytes(ipAddress);
+                    }
+
+                    byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+                    try {
+                        ipAddr = InetAddress.getByAddress(ipByteArray).getHostAddress();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
                     }
                 }
-            };
-            runOnUiThread(scanTextRunnable);
+                String prefix;
+                if (ipAddr != null) {
+                    prefix = ipAddr.substring(0, ipAddr.lastIndexOf(".") + 1);
+                } else {
+                    prefix = "192.168.0.";
+                }
 
-            scanCounter = 0;
-            while (scanCounter < 255) {
                 if (findThread.isInterrupted()){
                     return "";
                 }
@@ -329,13 +348,40 @@ public class MainActivity extends AppCompatActivity {
                 Socket s = null;
                 try {
                     ipAddr = prefix + String.valueOf(scanCounter);
+
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (scanAlertDialog != null) {
+                                    scanAlertDialog.setMessage("Scanning Network (" + ipAddr + "). Make sure the accompanying software is downloaded and running on the computer you wish to connect to (http:\\\\www.___.com), and ensure both devices are connected to the same WiFi network.");
+                                    scanAlertDialog.show();
+
+                                    scanAlertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            scanCounter = 0;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+
                     s = new Socket();
                     s.connect(new InetSocketAddress(ipAddr, 8888), 5000);
-                    try {
-                        scanTextHandler.removeCallbacks(scanTextRunnable);
-                    }catch (NullPointerException e) {
-                        e.printStackTrace();
-                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            scanAlertDialog.dismiss();
+
+                            AlertDialog.Builder success  = new AlertDialog.Builder(context);
+                            success.setTitle("Success");
+                            success.setMessage("Connected Successfully to " + ipAddr);
+                            success.setPositiveButton("OK", null);
+                            success.create().show();
+                        }
+                    });
                     return ipAddr;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -372,12 +418,35 @@ public class MainActivity extends AppCompatActivity {
                     thread.start();
                 }
             } else {
-                try {
-                    scanTextHandler.removeCallbacks(scanTextRunnable);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-                runOnUiThread(() -> Toast.makeText(context, "Can't Find Device", Toast.LENGTH_LONG).show());
+                scanAlertDialog.dismiss();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        scanAlertDialog.dismiss();
+
+                        AlertDialog.Builder failure = new AlertDialog.Builder(context);
+                        failure.setTitle("Error");
+                        failure.setMessage("Failed to Connect");
+                        failure.setPositiveButton("Connect Manually", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                enterManualIP();
+                            }
+                        });
+
+                        failure.setNegativeButton("Try Again", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                scanCounter = 0;
+                                FindIP finderClass = new FindIP(context);
+                                findThread = new Thread(finderClass);
+                                findThread.start();
+                            }
+                        });
+                        failure.setCancelable(false);
+                        failure.create().show();
+                    }
+                });
             }
         }
     }

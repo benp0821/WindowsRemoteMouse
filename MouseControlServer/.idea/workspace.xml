@@ -2,9 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a54a6a37-71c1-48b8-8ba5-d204ae1cb604" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/SocketClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/SocketClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/CustomKeyButton.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/ArrowButtonInterpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/ArrowButtonInterpreter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/CustomKeyboard.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/CustomKeyboard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/GestureInterpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/GestureInterpreter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/HiddenBufferEditText.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/HiddenBufferEditText.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/KeyboardInterpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/KeyboardInterpreter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/java/com/ben/mousecontrol/MainActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/layout/activity_main.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MouseAndroidClient/app/src/main/res/values/strings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SocketServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/SocketServer.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

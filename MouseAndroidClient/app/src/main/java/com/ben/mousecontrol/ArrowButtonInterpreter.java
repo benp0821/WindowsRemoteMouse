@@ -22,9 +22,9 @@ class ArrowButtonInterpreter {
         SharedPreferences pref = context.getApplicationContext().getSharedPreferences("sharedPref", 0);
         arrowToggle = pref.getString("arrowToggle", "keyboard");
         if (arrowToggle.equals("keyboard")){
-            KeyboardInterpreter.toggleCustomKeyPressed(arrowToggleBtn, true);
+            CustomKeyboard.toggleCustomKeyPressed(arrowToggleBtn, true);
         }else if (arrowToggle.equals("mouse")){
-            KeyboardInterpreter.toggleCustomKeyPressed(arrowToggleBtn, false);
+            CustomKeyboard.toggleCustomKeyPressed(arrowToggleBtn, false);
         }
 
         arrowToggleBtn.setOnClickListener(view -> {
@@ -32,10 +32,10 @@ class ArrowButtonInterpreter {
             String currentValue = pref.getString("arrowToggle", "keyboard");
             if (currentValue.equals("keyboard")){
                 arrowToggle = "mouse";
-                KeyboardInterpreter.toggleCustomKeyPressed(arrowToggleBtn, false);
+                CustomKeyboard.toggleCustomKeyPressed(arrowToggleBtn, false);
             }else if (currentValue.equals("mouse")){
                 arrowToggle = "keyboard";
-                KeyboardInterpreter.toggleCustomKeyPressed(arrowToggleBtn, true);
+                CustomKeyboard.toggleCustomKeyPressed(arrowToggleBtn, true);
             }
             editor.putString("arrowToggle", arrowToggle);
             editor.apply();

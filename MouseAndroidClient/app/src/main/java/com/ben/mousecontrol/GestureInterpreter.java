@@ -57,7 +57,7 @@ public class GestureInterpreter extends ScaleGestureDetector.SimpleOnScaleGestur
         @SuppressLint("ClickableViewAccessibility") View.OnTouchListener touchListener = (v, event) -> {
             int action = event.getActionMasked();
 
-            if (!KeyboardInterpreter.keyboardPinned) {
+            if (!CustomKeyboard.keyboardPinned) {
                 EditText hiddenKeyBuffer = context.findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
                 CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
             }

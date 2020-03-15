@@ -18,4 +18,6 @@
     <string name="shift">SHIFT</string>
     <string name="windows">WIN</string>
     <string name="pin">PIN</string>
+    <string name="copy">copy (win)</string>
+    <string name="paste">paste</string>
 </resources>
