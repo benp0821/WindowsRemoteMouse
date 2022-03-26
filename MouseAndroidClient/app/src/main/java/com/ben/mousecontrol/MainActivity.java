@@ -1,33 +1,44 @@
 package com.ben.mousecontrol;
 
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
-import android.view.KeyEvent;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListPopupWindow;
+import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -36,16 +47,30 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     SocketClient client;
     Thread thread;
     Thread findThread;
-    volatile String ip;
+    volatile String ip, connectionType = null;
     int scanCounter;
     boolean previewImage;
     AlertDialog scanAlertDialog;
+    private static final int REQUEST_ENABLE_BT = 1234;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    boolean bluetoothFailure = false;
+    HashMap<String, String> bluetoothDevices = new HashMap<>();
+    ArrayList<String> bluetoothDeviceNames = new ArrayList<>();
+    boolean bluetoothDiscovery = false;
+    boolean wifiScanning = false;
+    boolean wifiManualEntry = false;
+    BroadcastReceiver receiver = null;
+    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    boolean wifiOrBluetoothChoice = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,11 +85,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+
+        if (connectionType.equals("Bluetooth")){
+            MenuItem mi = menu.findItem(R.id.connType);
+            mi.setTitle("Switch to WiFi");
+
+            MenuItem scan = menu.findItem(R.id.scan);
+            scan.setVisible(false);
+            MenuItem manual = menu.findItem(R.id.manual);
+            manual.setVisible(false);
+        }else if (connectionType.equals("WiFi")){
+            MenuItem mi = menu.findItem(R.id.connType);
+            mi.setTitle("Switch to Bluetooth");
+
+            MenuItem scan = menu.findItem(R.id.scan);
+            scan.setVisible(true);
+            MenuItem manual = menu.findItem(R.id.manual);
+            manual.setVisible(true);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
         previewImage = pref.getBoolean("previewImage", true);
+
         MenuItem previewImageBtn = menu.findItem(R.id.show_image);
         previewImageBtn.setChecked(previewImage);
 
@@ -88,10 +138,13 @@ public class MainActivity extends AppCompatActivity {
 
             dialog.dismiss();
 
+            wifiManualEntry = false;
+
             SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
             SharedPreferences.Editor editor = pref.edit();
             ip = input.getText().toString();
             editor.putString("ipAddr", ip);
+            editor.putString("connectionType", "WiFi");
             editor.apply();
 
             endNetworkingTasks();
@@ -104,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void enterManualIP(){
+        wifiManualEntry = true;
+        wifiScanning = false;
+
         EditText hiddenKeyBuffer = findViewById(R.id.hiddenKeyBuffer);
         CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
         CustomKeyboard.keyboardPinned = false;
@@ -122,10 +178,24 @@ public class MainActivity extends AppCompatActivity {
                 inputManager.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
             }
 
+            wifiManualEntry = false;
+
             dialog.cancel();
         });
         AlertDialog dialog = builder.create();
-        dialog.setCanceledOnTouchOutside(false);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.setCancelable(true);
+
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface d) {
+                //Hides keyboard when area outside of manual ip entry dialog box is touched (not cancel button).
+                //Code doesn't make sense in this context, but it works when the other method of hiding keyboard does not for whatever reason.
+                hiddenKeyBuffer.postDelayed(() -> CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false), 100);
+
+                wifiManualEntry = false;
+            }
+        });
 
         dialog.setOnShowListener(dialog1 -> {
             Button b = ((AlertDialog) dialog1).getButton(AlertDialog.BUTTON_POSITIVE);
@@ -149,7 +219,35 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+        SharedPreferences.Editor editor = pref.edit();
+
+        CustomKeyboard.keyboardPinned = false;
+        EditText hiddenKeyBuffer = findViewById(com.ben.mousecontrol.R.id.hiddenKeyBuffer);
+        CustomKeyboard.setKeyboardVisiblity(hiddenKeyBuffer, false);
+
         switch (item.getItemId()) {
+            case R.id.connType:
+                bluetoothFailure = false;
+                bluetoothDiscovery = false;
+                if (connectionType.equals("WiFi")){
+                    endNetworkingTasks();
+                    startBluetoothOnResume();
+
+                    connectionType = "Bluetooth";
+                    editor.putString("connectionType", "");
+                }else if (connectionType.equals("Bluetooth")){
+                    endNetworkingTasks();
+                    startWifiOnResume();
+
+                    connectionType = "WiFi";
+                    editor.putString("connectionType", "");
+                }
+
+                editor.apply();
+
+                invalidateOptionsMenu();
+                break;
             case R.id.scan:
                 if (findThread == null || !findThread.isAlive()) {
                     endNetworkingTasks();
@@ -166,8 +264,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.show_image:
                 item.setChecked(!item.isChecked());
 
-                SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
-                SharedPreferences.Editor editor = pref.edit();
                 editor.putBoolean("previewImage", item.isChecked());
                 previewImage = item.isChecked();
 
@@ -188,6 +284,174 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+        if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION){
+            int index = 0;
+            HashMap<String, Integer> PermissionsMap = new HashMap<String, Integer>();
+            for (String permission : permissions){
+                PermissionsMap.put(permission, grantResults[index]);
+                index++;
+            }
+
+            if((PermissionsMap.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED)){
+                AlertDialog.Builder failure = new AlertDialog.Builder(this);
+                failure.setTitle("Error");
+                failure.setMessage("Failed to Find Bluetooth Devices");
+                failure.setPositiveButton("OK", null);
+
+                failure.setCancelable(false);
+                failure.create().show();
+
+                bluetoothFailure = true;
+            }else{
+                findBluetoothDevice();
+            }
+        }
+    }
+
+    public void findBluetoothDevice(){
+        bluetoothDiscovery = true;
+
+        bluetoothDevices.clear();
+        bluetoothDeviceNames.clear();
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_list_item_1, bluetoothDeviceNames);
+
+        bluetoothAdapter.startDiscovery();
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (device.getName() != null && !bluetoothDevices.containsKey(device.getName())) {
+                        bluetoothDevices.put(device.getName(), device.getAddress());
+                        bluetoothDeviceNames.add(device.getName());
+                        arrayAdapter.notifyDataSetChanged();
+                    }
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(receiver, filter);
+
+        findViewById(R.id.layout).post(() -> {
+            TextView promptView = new TextView(this);
+            promptView.setText("Available Bluetooth Devices");
+            promptView.setTextSize(25);
+            promptView.setTextColor(Color.BLACK);
+            promptView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+
+            ListPopupWindow popup = new ListPopupWindow(this);
+            popup.setAdapter(arrayAdapter);
+            popup.setAnchorView(findViewById(R.id.layout));
+            android.view.Display display = ((android.view.WindowManager) Objects.requireNonNull(getSystemService(Context.WINDOW_SERVICE))).getDefaultDisplay();
+            Point p = new Point();
+            display.getSize(p);
+            popup.setWidth((int)(p.x * 0.88));
+            popup.setHeight((int)(p.y * 0.68));
+            popup.setModal(true);
+            popup.setHorizontalOffset((p.x - popup.getWidth()) / 2);
+            popup.setPromptView(promptView);
+            popup.show();
+            popup.setOnDismissListener(() -> {
+                bluetoothAdapter.cancelDiscovery();
+            });
+        });
+
+        //TODO: Do this after bluetooth device selected
+        //bluetoothAdapter.cancelDiscovery();
+
+        /*SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+        SharedPreferences.Editor editor = pref.edit();
+        connectionType = "Bluetooth";
+        editor.putString("connectionType", connectionType);
+        editor.apply();*/
+    }
+
+    public void findBluetoothDeviceIfLocationEnabled(){
+        if (!bluetoothDiscovery) {
+            bluetoothDiscovery = true;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            } else {
+                findBluetoothDevice();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (requestCode == REQUEST_ENABLE_BT){
+            if (resultCode == RESULT_OK){
+                findBluetoothDeviceIfLocationEnabled();
+            }else if (resultCode == RESULT_CANCELED){
+                bluetoothFailure = true;
+
+                AlertDialog.Builder failure = new AlertDialog.Builder(this);
+                failure.setTitle("Error");
+                failure.setMessage("There was an error when attempting to enable Bluetooth.");
+                failure.setPositiveButton("OK", null);
+
+                failure.setCancelable(false);
+                failure.create().show();
+            }
+        }
+    }
+
+    public void startBluetoothOnResume(){
+        wifiOrBluetoothChoice = false;
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            AlertDialog.Builder failure = new AlertDialog.Builder(this);
+            failure.setTitle("Error");
+            failure.setMessage("Bluetooth Not Supported On This Device");
+            failure.setPositiveButton("OK", null);
+
+            failure.setCancelable(false);
+            failure.create().show();
+        }else{
+            if (!bluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }else{
+                findBluetoothDeviceIfLocationEnabled();
+            }
+        }
+    }
+
+    public void startWifiOnResume(){
+        wifiOrBluetoothChoice = false;
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+        if (ip == null || ip.equals("")) {
+            ip = pref.getString("ipAddr", "");
+        }
+        if (ip.equals("") || ip == null) {
+            if (!wifiManualEntry){
+                wifiScanning = true;
+                scanCounter = 0;
+                FindIP finderClass = new FindIP(this);
+                findThread = new Thread(finderClass);
+                findThread.start();
+            }
+
+        } else {
+            client = new SocketClient(this, ip, 8888); //192.168.1.8
+
+            thread = new Thread(client);
+            thread.start();
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
 
@@ -203,18 +467,39 @@ public class MainActivity extends AppCompatActivity {
         }
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
+        SharedPreferences.Editor editor = pref.edit();
 
-        ip = pref.getString("ipAddr", "");
+        if (connectionType == null) {
+            connectionType = pref.getString("connectionType", "");
+        }
 
-        if (ip.equals("")) {
-            FindIP finderClass = new FindIP(this);
-            findThread = new Thread(finderClass);
-            findThread.start();
-        }else{
-            client = new SocketClient(this, ip, 8888); //192.168.1.8
+        if (connectionType.equals("") && !bluetoothFailure && !bluetoothDiscovery && !wifiScanning && !wifiManualEntry){
+            if (!wifiOrBluetoothChoice) {
+                AlertDialog.Builder connTypeChoice = new AlertDialog.Builder(this);
+                connTypeChoice.setTitle("Connection Type");
+                connTypeChoice.setMessage("Do you want to Connect Via Bluetooth or WiFi?");
+                connTypeChoice.setPositiveButton("Bluetooth", (dialog, which) -> {
+                    connectionType = "Bluetooth";
+                    editor.putString("connectionType", "");
+                    editor.apply();
+                    startBluetoothOnResume();
+                });
 
-            thread = new Thread(client);
-            thread.start();
+                connTypeChoice.setNegativeButton("WiFi", (dialog, which) -> {
+                    connectionType = "WiFi";
+                    editor.putString("connectionType", "");
+                    editor.apply();
+                    startWifiOnResume();
+                });
+                connTypeChoice.setCancelable(false);
+                connTypeChoice.create().show();
+                wifiOrBluetoothChoice = true;
+            }
+        }else if (connectionType.equals("WiFi")) {
+            startWifiOnResume();
+        }else if (connectionType.equals("Bluetooth") && !bluetoothFailure)
+        {
+            startBluetoothOnResume();
         }
 
         if (CustomKeyboard.keyboardPinned){
@@ -260,6 +545,17 @@ public class MainActivity extends AppCompatActivity {
             midClickBtn.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC));
         }
 
+
+        if (receiver != null){
+            try {
+                unregisterReceiver(receiver);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        bluetoothAdapter.cancelDiscovery();
+
         try {
             thread.interrupt();
         }catch (Exception e){
@@ -298,12 +594,19 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     enterManualIP();
-                    scanCounter = 256;
+                    scanCounter = 1000;
                 }
             });
 
             scanAlert.setNegativeButton("Try Again", null); //listener added below, as the button should not close the dialog.
-            scanAlert.setCancelable(false);
+            scanAlert.setCancelable(true);
+
+            scanAlert.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    scanCounter = 1000;
+                }
+            });
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -397,27 +700,34 @@ public class MainActivity extends AppCompatActivity {
                 scanCounter++;
             }
 
-
-            return null;
+            if (scanCounter >= 1000){
+                return "manual";
+            }else{
+                return null;
+            }
         }
 
         @Override
         public void run() {
             String temp = findIpAddress();
-            if (temp != null) {
+            if (temp != null && !temp.equals("manual")) {
                 if (thread == null || !thread.isAlive()) {
                     ip = temp;
                     SharedPreferences pref = getApplicationContext().getSharedPreferences("sharedPref", 0);
                     SharedPreferences.Editor editor = pref.edit();
                     editor.putString("ipAddr", ip);
+                    editor.putString("connectionType", "WiFi");
                     editor.apply();
+
+                    wifiScanning = false;
+                    wifiManualEntry = false;
 
                     client = new SocketClient(context, ip, 8888);
 
                     thread = new Thread(client);
                     thread.start();
                 }
-            } else {
+            } else if (temp == null){
                 scanAlertDialog.dismiss();
                 runOnUiThread(new Runnable() {
                     @Override
@@ -443,7 +753,7 @@ public class MainActivity extends AppCompatActivity {
                                 findThread.start();
                             }
                         });
-                        failure.setCancelable(false);
+                        failure.setCancelable(true);
                         failure.create().show();
                     }
                 });
